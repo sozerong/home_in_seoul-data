@@ -1,4 +1,16 @@
 {
+  "card": {
+    "change_policy": [
+      "숫자가 같은 내부 변경은 같음 증명을 붙여 공개합니다.",
+      "숫자가 바뀌는 공개는 무엇이 얼마나 바뀌었는지 버전 기록에 먼저 보여 줍니다.",
+      "컬럼을 지우거나 이름을 바꾸지 않고 새 컬럼을 더합니다. 꼭 지워야 하면 한 버전 동안 옛 컬럼을 남기고 미리 알립니다."
+    ],
+    "collection_cycle": "출처마다 다르고, 만든 사람의 PC에서 도는 파이프라인(Airflow)이 수집합니다. 전월세와 역 정보는 매주 월요일 자동으로 받습니다. 생활이동은 매월 21일부터 파일을 기다렸다가 사람이 내려받아 넣으면 처리합니다. 상가정보(출처 분기 갱신)와 행정동 경계(출처 연 1회 갱신)는 새 파일이 나왔을 때 사람이 넣으면 처리합니다.",
+    "contact_label": "GitHub 이슈로 오류 신고·요청",
+    "contact_url": "https://github.com/sozerong/home_in_seoul/issues/new?template=data_request.yml",
+    "owner": "sozerong (개인 프로젝트, 1인 운영)",
+    "publication_cycle": "비정기입니다. 수집할 때마다 공개하지 않고, 사람이 고른 버전만 공개합니다(결정 119). 공개 날짜는 약속하지 않습니다."
+  },
   "datasets": [
     {
       "columns": [
@@ -97,7 +109,7 @@
         },
         {
           "description": "최근 계약월(최대 6개월, rent_listing과 같은 기간) 신규 월세 계약 수와 보증금·월세 중앙값 (면적 조건 없음) (한 줄로 함께 설명: monthly_deals, monthly_median_deposit_10k_won, monthly_median_rent_10k_won)",
-          "example": "71.0",
+          "example": "71",
           "help": "기간 내 신규 월세 계약 수. 기간은 홈 화면 '데이터 기준 시점'의 전월세 계약월(rent_months)입니다. 오피스텔과 연립다세대를 합쳤고 다가구 원룸은 포함하지 않습니다. 갱신 계약은 제외했습니다. 계약이 없으면 0이 아니라 NULL입니다.",
           "label": "월세 계약 수(건)",
           "name": "monthly_deals",
@@ -139,7 +151,7 @@
         },
         {
           "description": "같은 기간 신규 전세 계약 수와 보증금 중앙값 (한 줄로 함께 설명: jeonse_deals, jeonse_median_deposit_10k_won)",
-          "example": "29.0",
+          "example": "29",
           "help": "기간 내 신규 전세 계약(월세 0원) 수. 오피스텔과 연립다세대만 포함하고 갱신 계약은 제외했습니다. 계약이 없으면 0이 아니라 NULL입니다.",
           "label": "전세 계약 수(건)",
           "name": "jeonse_deals",
@@ -209,7 +221,7 @@
         },
         {
           "description": "필수 5종 업소 수(세탁 = 세탁소 + 셀프 빨래방) (한 줄로 함께 설명: convenience_store, supermarket, pharmacy, internal_pediatric_clinic, laundry)",
-          "example": "18.0",
+          "example": "18",
           "help": "행정동 경계 안 편의점 수. 소상공인시장진흥공단 상가(상권)정보의 업종 소분류 코드 G20405로 집계했습니다. 기준 시점은 홈 화면 '데이터 기준 시점'의 상가정보 수집일(store_collected_date)입니다.",
           "label": "편의점 수(곳)",
           "name": "convenience_store",
@@ -223,7 +235,7 @@
         },
         {
           "description": "필수 5종 업소 수(세탁 = 세탁소 + 셀프 빨래방) (한 줄로 함께 설명: convenience_store, supermarket, pharmacy, internal_pediatric_clinic, laundry)",
-          "example": "18.0",
+          "example": "18",
           "help": "행정동 경계 안 슈퍼마켓 수(상가정보 업종 소분류 G20404).",
           "label": "슈퍼마켓 수(곳)",
           "name": "supermarket",
@@ -237,7 +249,7 @@
         },
         {
           "description": "필수 5종 업소 수(세탁 = 세탁소 + 셀프 빨래방) (한 줄로 함께 설명: convenience_store, supermarket, pharmacy, internal_pediatric_clinic, laundry)",
-          "example": "11.0",
+          "example": "11",
           "help": "행정동 경계 안 약국 수(상가정보 업종 소분류 G21501).",
           "label": "약국 수(곳)",
           "name": "pharmacy",
@@ -251,7 +263,7 @@
         },
         {
           "description": "필수 5종 업소 수(세탁 = 세탁소 + 셀프 빨래방) (한 줄로 함께 설명: convenience_store, supermarket, pharmacy, internal_pediatric_clinic, laundry)",
-          "example": "5.0",
+          "example": "5",
           "help": "행정동 경계 안 내과·소아과 의원 수(상가정보 업종 소분류 Q10201).",
           "label": "내과·소아과 의원 수(곳)",
           "name": "internal_pediatric_clinic",
@@ -265,7 +277,7 @@
         },
         {
           "description": "필수 5종 업소 수(세탁 = 세탁소 + 셀프 빨래방) (한 줄로 함께 설명: convenience_store, supermarket, pharmacy, internal_pediatric_clinic, laundry)",
-          "example": "10.0",
+          "example": "10",
           "help": "행정동 경계 안 세탁소(S20901)와 셀프 빨래방(S20902) 수의 합.",
           "label": "세탁소·빨래방 수(곳)",
           "name": "laundry",
@@ -658,7 +670,7 @@
         },
         {
           "description": "보증금, 월세, 전용면적, 층(지하는 음수), 건축년도 (한 줄로 함께 설명: deposit_10k_won, monthly_rent_10k_won, excl_area_m2, floor, build_year)",
-          "example": "7571.0",
+          "example": "7571",
           "help": "계약 보증금(만원). 예: 3000 = 3천만 원.",
           "label": "보증금(만원)",
           "name": "deposit_10k_won",
@@ -671,7 +683,7 @@
         },
         {
           "description": "보증금, 월세, 전용면적, 층(지하는 음수), 건축년도 (한 줄로 함께 설명: deposit_10k_won, monthly_rent_10k_won, excl_area_m2, floor, build_year)",
-          "example": "41.0",
+          "example": "41",
           "help": "월세(만원). 전세는 0입니다.",
           "label": "월세(만원)",
           "name": "monthly_rent_10k_won",
@@ -697,7 +709,7 @@
         },
         {
           "description": "보증금, 월세, 전용면적, 층(지하는 음수), 건축년도 (한 줄로 함께 설명: deposit_10k_won, monthly_rent_10k_won, excl_area_m2, floor, build_year)",
-          "example": "4.0",
+          "example": "4",
           "help": "계약 주택의 층. 지하는 음수입니다.",
           "label": "층",
           "name": "floor",
@@ -710,7 +722,7 @@
         },
         {
           "description": "보증금, 월세, 전용면적, 층(지하는 음수), 건축년도 (한 줄로 함께 설명: deposit_10k_won, monthly_rent_10k_won, excl_area_m2, floor, build_year)",
-          "example": "2015.0",
+          "example": "2015",
           "help": "건축년도. 일부 계약은 NULL입니다.",
           "label": "건축년도",
           "name": "build_year",
@@ -827,7 +839,7 @@
         },
         {
           "description": "근거: 그 행정동 경계 안 상가 업소(전체 업종) 중 이 코드를 가진 업소 수와 비율. 2026-11-13 전에는 필수 5종 업소만 셌다(7절) (한 줄로 함께 설명: stores, share)",
-          "example": "934.0",
+          "example": "934",
           "help": "행정동 경계 안 상가 업소(전체 업종) 중 이 행정안전부 코드를 가진 업소 수. 코드 대응을 정한 근거입니다.",
           "label": "대응 근거 업소 수(곳)",
           "name": "stores",
@@ -1003,6 +1015,7 @@
   "title": "서울 행정동 주거 지표",
   "versions": [
     {
+      "changes": null,
       "created_at": "2026-11-16T13:33:47+09:00",
       "manifest": "v2026.11.16/manifest.json",
       "sources": {
