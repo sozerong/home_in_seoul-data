@@ -1,120 +1,776 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8">
-<title>서울 행정동 주거 지표</title>
-<style>body{font-family:sans-serif;max-width:1100px;margin:2em auto;padding:0 1em}table{border-collapse:collapse;margin:.5em 0 1.5em}td,th{border:1px solid #ccc;padding:3px 6px;text-align:left;vertical-align:top}code{font-size:90%}</style></head><body>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>서울 행정동 주거 지표 데이터 포털</title>
+<link rel="icon" href="data:,">
+<meta name="description" content="서울 426개 행정동의 전월세 시세, 출근 이동 시간, 가장 가까운 역, 생활 편의 업소 수. 공개 Parquet·CSV와 브라우저 안 SQL">
+<style>
+:root{--bg:#f6f7f9;--panel:#fff;--line:#e2e5ea;--text:#1d2330;--muted:#5d6675;--accent:#2457c5;--accent-bg:#eaf0fd;--ok:#1d7a46;--warn:#9a5b00;--err:#b42318;--mono:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:system-ui,-apple-system,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:var(--text);background:var(--bg);font-size:14px;line-height:1.5}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+code,pre,textarea,.mono{font-family:var(--mono);font-size:12.5px}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:18px;padding:0 18px;height:52px;background:#14213d;color:#fff}
+header .brand{font-weight:700;font-size:15px;color:#fff;white-space:nowrap}
+header nav{display:flex;gap:4px}
+header nav a{color:#c9d3ea;padding:6px 10px;border-radius:6px}
+header nav a.on,header nav a:hover{background:#24365f;color:#fff;text-decoration:none}
+header .right{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12.5px;color:#c9d3ea}
+header select{background:#24365f;color:#fff;border:1px solid #3a4f80;border-radius:6px;padding:4px 6px}
+.badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:11.5px;background:var(--accent-bg);color:var(--accent);white-space:nowrap}
+.badge.gray{background:#eef0f3;color:var(--muted)}.badge.warn{background:#fff3df;color:var(--warn)}.badge.ok{background:#e5f5ec;color:var(--ok)}
+.layout{display:grid;grid-template-columns:280px 1fr;min-height:calc(100% - 52px)}
+aside{background:var(--panel);border-right:1px solid var(--line);padding:14px;overflow:auto;max-height:calc(100vh - 52px);position:sticky;top:52px}
+aside input[type=search]{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px}
+aside h4{margin:14px 0 6px;font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.dslink{display:block;padding:7px 8px;border-radius:6px;color:var(--text)}
+.dslink:hover{background:var(--bg);text-decoration:none}.dslink.on{background:var(--accent-bg)}
+.dslink .t{font-weight:600}.dslink .s{font-size:12px;color:var(--muted)}
+.hit{display:block;font-size:12px;padding:2px 8px 2px 18px;color:var(--muted)}
+main{padding:22px 28px;min-width:0}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:17px;margin:26px 0 10px}h3{font-size:14px;margin:18px 0 8px}
+.sub{color:var(--muted);margin:0 0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+a.card{color:var(--text)}a.card:hover{border-color:var(--accent);text-decoration:none}
+.card .t{font-weight:700;margin-bottom:2px}.card .id{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.card .g{color:var(--muted);font-size:12.5px;margin:6px 0}
+.kpis{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;min-width:130px}
+.kpi b{display:block;font-size:18px}.kpi span{font-size:12px;color:var(--muted)}
+table.grid{border-collapse:separate;border-spacing:0;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+table.grid th,table.grid td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.grid th{background:#f1f3f6;font-weight:600;font-size:12.5px;white-space:nowrap}
+table.grid tr:last-child td{border-bottom:0}
+table.grid td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:14px 0 16px;flex-wrap:wrap}
+.tabs a{padding:8px 14px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs a.on{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}.tabs a:hover{text-decoration:none;color:var(--text)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button,.btn{font:inherit;font-size:13px;padding:6px 12px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+button:hover,.btn:hover{border-color:#b9c0cc;text-decoration:none}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}button.primary:hover{background:#1c48a8}
+button:disabled{opacity:.55;cursor:default}
+.note{color:var(--muted);font-size:12.5px}
+.err{color:var(--err);white-space:pre-wrap;background:#fdecea;border:1px solid #f6c7c2;border-radius:6px;padding:8px 10px;margin:8px 0}
+pre.code{background:#0f172a;color:#e2e8f0;padding:12px 14px;border-radius:8px;overflow:auto;margin:6px 0 4px}
+.copy{float:right;font-size:12px;padding:3px 8px}
+.profile{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.pcard{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.pcard .n{font-family:var(--mono);font-weight:600}
+.stats{display:grid;grid-template-columns:auto 1fr;gap:1px 10px;font-size:12.5px;margin-top:8px}
+.stats span:nth-child(odd){color:var(--muted)}
+.hist{display:flex;align-items:flex-end;gap:2px;height:64px;margin-top:10px;border-bottom:1px solid var(--line)}
+.hist div{flex:1;background:#8fb0ec;min-height:1px;border-radius:2px 2px 0 0}
+.hist div:hover{background:var(--accent)}
+.hl{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.bar{display:grid;grid-template-columns:minmax(0,1fr) 54px;gap:6px;align-items:center;font-size:12.5px;margin:3px 0}
+.bar .b{position:relative;background:#f1f3f6;border-radius:4px;overflow:hidden;padding:2px 6px;white-space:nowrap;text-overflow:ellipsis}
+.bar .b i{position:absolute;left:0;top:0;bottom:0;background:#dbe6fb;z-index:0}.bar .b span{position:relative}
+.bar .c{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.miss{height:6px;border-radius:3px;background:#e5f5ec;overflow:hidden;margin-top:4px}.miss i{display:block;height:100%;background:#e8a33d}
+/* SQL */
+.sqlwrap{display:grid;grid-template-rows:auto auto auto 1fr;gap:10px;min-height:calc(100vh - 100px)}
+#sql{width:100%;min-height:190px;resize:vertical;border:1px solid var(--line);border-radius:8px;padding:10px 12px;line-height:1.55;background:#fff;tab-size:2}
+#sql:focus{outline:2px solid var(--accent-bg);border-color:var(--accent)}
+.status{font-size:12.5px;color:var(--muted)}
+.result{overflow:auto;max-height:calc(100vh - 430px);min-height:120px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.result table{border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:100%}
+.result th{position:sticky;top:0;background:#f1f3f6;cursor:pointer;user-select:none;white-space:nowrap;text-align:left;padding:6px 10px;border-bottom:1px solid var(--line)}
+.result th small{color:var(--muted);font-weight:400;margin-left:4px}
+.result td{padding:4px 10px;border-bottom:1px solid #eef0f3;white-space:nowrap;max-width:360px;overflow:hidden;text-overflow:ellipsis}
+.result td.num{text-align:right;font-variant-numeric:tabular-nums}.result td.null{color:#a0a7b4;font-style:italic}
+.result tr:hover td{background:#f8fafc}
+.tree details{margin:2px 0}.tree summary{cursor:pointer;padding:3px 4px;border-radius:4px;font-weight:600}
+.tree summary:hover{background:var(--bg)}
+.tree .col{display:flex;justify-content:space-between;gap:6px;padding:2px 6px 2px 18px;font-family:var(--mono);font-size:12px;cursor:pointer;border-radius:4px}
+.tree .col:hover{background:var(--accent-bg)}.tree .col span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tree .col em{color:var(--muted);font-style:normal;white-space:nowrap}
+.sqlwrap>*{min-width:0}
+.chart{padding:12px 14px}.chart .bar{grid-template-columns:minmax(80px,220px) 1fr 90px}.chart .lab{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px}
+.hist-list{font-size:12.5px}.hist-list a{display:block;padding:3px 4px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);font-family:var(--mono)}
+.hist-list a:hover{background:var(--bg);text-decoration:none}
+.rel{display:grid;grid-template-columns:auto auto 1fr;gap:4px 10px;font-size:13px;align-items:center}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#14213d;color:#fff;padding:8px 14px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:10}
+.toast.on{opacity:1}
+.loading{color:var(--muted);padding:20px 0}
+.notes{background:#fff8e6;border:1px solid #f1d9a6;border-radius:10px;padding:12px 16px;margin:0 0 16px}.notes b{display:block;margin-bottom:4px}.notes ul{margin:4px 0 0;padding-left:18px}.notes .ref{color:var(--muted);font-size:11.5px}
+.guide{background:var(--accent-bg);border:1px solid #c9d8f7;border-radius:10px;padding:14px 16px;margin:10px 0 6px}.guide ol{margin:6px 0 0;padding-left:20px}
+.lbl{font-weight:600}.eng{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.hint{background:#fff;border:1px dashed #f6c7c2;border-radius:6px;padding:8px 12px;font-size:12.5px;margin:0 0 8px}.hint ul{margin:4px 0 0;padding-left:18px}
+.faq dt{font-weight:600;margin-top:12px}.faq dd{margin:4px 0 0 0;color:var(--text)}.faq .ref{color:var(--muted);font-size:11.5px}
+@media (max-width:860px){.layout{grid-template-columns:1fr}aside{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line)}header nav a{padding:6px 6px}header .brand{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="#/">서울 행정동 주거 지표</a>
+  <nav>
+    <a href="#/" data-nav="home">데이터 목록</a>
+    <a href="#/sql" data-nav="sql">SQL 편집기</a>
+    <a href="#/sources" data-nav="sources">출처·이용조건</a>
+    <a href="#/help" data-nav="help">처음 오셨나요</a>
+  </nav>
+  <div class="right"><label for="ver">버전</label><select id="ver" aria-label="데이터 버전"></select><span id="latestBadge"></span></div>
+</header>
+<div class="layout">
+  <aside>
+    <input id="q" type="search" placeholder="표·컬럼·뜻 검색 (예: 월세, 출근, dong_id)" aria-label="표와 컬럼 검색" autocomplete="off">
+    <div id="side"></div>
+  </aside>
+  <main id="main">
 <h1>서울 행정동 주거 지표</h1>
-<p>최신 버전 <b>v2026.11.16</b> (만든 시각 2026-11-16T13:33:47+09:00). 고정 주소: <a href="latest.json">latest.json</a>, 기계용 목록: <a href="catalog.json">catalog.json</a>, 브라우저 안 SQL: <a href="sql.html">sql.html</a>, 출처와 이용조건: <a href="NOTICE.md">NOTICE.md</a></p>
-<h2>신선도 (원천 기준)</h2><table>
-<tr><th>boundary_base_date</th><td>2025-06-30</td></tr>
-<tr><th>commute_months</th><td>202602,202603,202604,202605,202606,202607</td></tr>
-<tr><th>congestion_collected_date</th><td>2026-11-16</td></tr>
-<tr><th>rent_collected_date</th><td>2026-11-16</td></tr>
-<tr><th>rent_months</th><td>202606,202607,202608,202609,202610</td></tr>
-<tr><th>store_collected_date</th><td>2026-11-14</td></tr>
+<p>서울 426개 행정동의 전월세 시세, 출근 이동 시간, 가장 가까운 역, 생활 편의 업소 수. 공공데이터를 행정동 기준으로 맞춘 결과</p>
+<p>최신 버전 <b>v2026.11.16</b> (만든 시각 2026-11-16T13:33:47+09:00). 버전 폴더의 파일은 한 번 올리면 바뀌지 않습니다. 기계가 읽는 목록은 <a href="catalog.json">catalog.json</a>, 최신 버전 주소는 <a href="latest.json">latest.json</a>, 출처와 이용조건은 <a href="NOTICE.md">NOTICE.md</a>입니다. 이 페이지는 JavaScript가 돌면 표 탐색·SQL 편집기 화면으로 바뀝니다.</p>
+<p>모든 표는 통계청 행정동 코드 8자리(dong_id)로 dong_profile에 이어집니다. 같은 이름의 동이 있으므로(신사동: 강남구·관악구) 동 이름으로 표를 잇지 마세요.</p>
+<section><h2>행정동 프로필 (dong_profile)</h2><p>이 표의 한 줄은 행정동 하나입니다.</p>
+<ul><li><a href="v2026.11.16/dong_profile.parquet">v2026.11.16/dong_profile.parquet</a> (parquet, 426행, 26614바이트, sha256 d1b2010e81df83b05e27d10bc8815e28c0bead67400a70d2a67da2c32c69ca3c)</li><li><a href="v2026.11.16/dong_profile.csv">v2026.11.16/dong_profile.csv</a> (csv, 426행, 47536바이트, sha256 df44d259f4a28aec28992f81fc491b36a4344c8c3e963932a608a58c87ab2420)</li></ul>
+<p>한 줄을 구분하는 값(키): dong_id</p>
+<p>쓰기 전에 알아 둘 것:</p><ul><li>전월세 지표는 오피스텔·연립다세대만 센다. 다가구 원룸이 많은 동은 주거비가 덜 드러날 수 있다.</li><li>최근 달 전월세는 신고가 덜 들어와 계약 수가 적게 잡힐 수 있다.</li><li>계약이 없는 동은 계약 수와 중앙값이 0이 아니라 비어 있다.</li><li>계약 수가 적은 동은 중앙값이 크게 흔들린다(이 버전에서 월세 5건 미만 14곳, 전세 5건 미만 29곳). 계약 수 컬럼을 함께 본다.</li></ul>
+<table><tr><th>컬럼</th><th>한글 이름</th><th>단위</th><th>타입</th><th>설명</th><th>코드 값</th></tr>
+<tr><td>dong_id</td><td>동 코드(통계청)</td><td></td><td>character(8)</td><td>통계청 행정동 코드 8자리. 모든 표를 잇는 키다. 앞 5자리는 구 코드(sgg_cd)와 같다. 엑셀에서는 글자로 열어야 한다.</td><td></td></tr>
+<tr><td>mois_dong_cd</td><td>동 코드(행정안전부)</td><td></td><td>character(8)</td><td>행정안전부 행정동 코드 8자리. 통계청 코드와 체계가 달라 앞 5자리가 같아도 다른 구다(행정안전부 11230 = 동대문구, 통계청 11230 = 강남구). 다른 시스템과 맞출 때만 쓰고, 용신동처럼 나뉘는 동은 dong_mois_map을 쓴다.</td><td></td></tr>
+<tr><td>dong_nm</td><td>동 이름</td><td></td><td>text</td><td>통계청 2025 행정동 이름. 신사동이 강남구와 관악구에 하나씩 있어 이름만으로는 동을 가를 수 없다.</td><td></td></tr>
+<tr><td>sgg_cd</td><td>구 코드(통계청)</td><td></td><td>character(5)</td><td>통계청 시군구 코드 5자리. 강남구는 11230이다. 행정안전부식 코드는 체계가 달라 11230이 동대문구다. 두 코드를 섞지 말고, 글자로 비교한다. 구 이름은 코드 값 풀이에 있다.</td><td>11010 = 종로구; 11020 = 중구; 11030 = 용산구; 11040 = 성동구; 11050 = 광진구; 11060 = 동대문구; 11070 = 중랑구; 11080 = 성북구; 11090 = 강북구; 11100 = 도봉구; 11110 = 노원구; 11120 = 은평구; 11130 = 서대문구; 11140 = 마포구; 11150 = 양천구; 11160 = 강서구; 11170 = 구로구; 11180 = 금천구; 11190 = 영등포구; 11200 = 동작구; 11210 = 관악구; 11220 = 서초구; 11230 = 강남구; 11240 = 송파구; 11250 = 강동구</td></tr>
+<tr><td>boundary_base_date</td><td>경계 기준일</td><td></td><td>date</td><td>동 경계를 정한 통계청 경계의 기준일. 동 이름과 코드는 이 날짜 기준이다.</td><td></td></tr>
+<tr><td>monthly_deals</td><td>월세 계약 수(건)</td><td>건</td><td>bigint</td><td>기간 안 신규 월세 계약 수. 기간은 홈 화면 &#x27;신선도&#x27; 표의 전월세 계약월(rent_months)이다. 오피스텔과 연립다세대를 합쳤고 다가구 원룸은 빠진다. 계약이 없으면 0이 아니라 비어 있다. 신규(새로 맺은) 계약만 센다. 갱신 계약은 빼서, 지금 새로 구하는 사람이 받을 수 있는 가격에 가깝게 했다.</td><td></td></tr>
+<tr><td>monthly_median_deposit_10k_won</td><td>월세 보증금 중앙값(만원)</td><td>만원</td><td>double precision</td><td>기간 안 신규 월세 계약의 보증금을 크기순으로 세웠을 때 가운데 값. 면적은 거르지 않았다. 계약이 없으면 비어 있다. 계약 수가 적은 동은 값이 크게 흔들리니 계약 수와 함께 본다(이 버전에서 월세 5건 미만 14곳, 전세 5건 미만 29곳).</td><td></td></tr>
+<tr><td>monthly_median_rent_10k_won</td><td>월세 중앙값(만원)</td><td>만원</td><td>double precision</td><td>기간 안 신규 월세 계약의 월세를 크기순으로 세웠을 때 가운데 값. 짝수면 가운데 두 값의 평균이다. 평균보다 큰 값 몇 개에 덜 흔들린다. 오피스텔·연립다세대를 합쳤고 면적은 거르지 않았다. 계약이 없으면 비어 있다. 계약 수가 적은 동은 값이 크게 흔들리니 계약 수와 함께 본다(이 버전에서 월세 5건 미만 14곳, 전세 5건 미만 29곳).</td><td></td></tr>
+<tr><td>jeonse_deals</td><td>전세 계약 수(건)</td><td>건</td><td>bigint</td><td>기간 안 신규 전세 계약(월세 0) 수. 오피스텔·연립다세대만 센다. 계약이 없으면 0이 아니라 비어 있다. 신규(새로 맺은) 계약만 센다. 갱신 계약은 빼서, 지금 새로 구하는 사람이 받을 수 있는 가격에 가깝게 했다.</td><td></td></tr>
+<tr><td>jeonse_median_deposit_10k_won</td><td>전세 보증금 중앙값(만원)</td><td>만원</td><td>double precision</td><td>기간 안 신규 전세 계약의 보증금 가운데 값. 계약이 없으면 비어 있다. 계약 수가 적은 동은 값이 크게 흔들리니 계약 수와 함께 본다(이 버전에서 월세 5건 미만 14곳, 전세 5건 미만 29곳).</td><td></td></tr>
+<tr><td>nearest_station_nm</td><td>가장 가까운 역</td><td></td><td>text</td><td>동 안쪽 대표점(동 도형 안에 반드시 들어가는 점. 무게중심은 동 밖에 떨어지는 동이 있어 쓰지 않음)에서 직선으로 가장 가까운 지하철역(모든 노선). 이름은 서울시 역사마스터 표기다.</td><td></td></tr>
+<tr><td>nearest_station_route</td><td>그 역의 노선</td><td></td><td>text</td><td>가장 가까운 역의 노선 이름(역사마스터 표기).</td><td></td></tr>
+<tr><td>nearest_station_distance_m</td><td>가장 가까운 역까지 직선거리(m)</td><td>m</td><td>numeric</td><td>동 안쪽 대표점(동 도형 안에 반드시 들어가는 점. 무게중심은 동 밖에 떨어지는 동이 있어 쓰지 않음)에서 그 역까지 곧게 잰 거리. 걷는 길 거리가 아니다.</td><td></td></tr>
+<tr><td>convenience_store</td><td>편의점 수(곳)</td><td>곳</td><td>bigint</td><td>동 경계 안 편의점 수. 소상공인시장진흥공단 상가(상권)정보의 업종 소분류 코드 G20405로 셌다. 기준 시점은 홈 화면 &#x27;신선도&#x27; 표의 상가정보 수집일(store_collected_date)이다.</td><td></td></tr>
+<tr><td>supermarket</td><td>슈퍼마켓 수(곳)</td><td>곳</td><td>bigint</td><td>동 경계 안 슈퍼마켓(상가정보 업종 소분류 코드 G20404) 수.</td><td></td></tr>
+<tr><td>pharmacy</td><td>약국 수(곳)</td><td>곳</td><td>bigint</td><td>동 경계 안 약국(상가정보 업종 소분류 코드 G21501) 수.</td><td></td></tr>
+<tr><td>internal_pediatric_clinic</td><td>내과·소아과 의원 수(곳)</td><td>곳</td><td>bigint</td><td>동 경계 안 내과·소아과 의원(상가정보 업종 소분류 코드 Q10201) 수.</td><td></td></tr>
+<tr><td>laundry</td><td>세탁소·빨래방 수(곳)</td><td>곳</td><td>bigint</td><td>동 경계 안 세탁소(상가정보 업종 소분류 코드 S20901)와 셀프 빨래방(S20902)을 더한 수.</td><td></td></tr>
 </table>
-<h2>dong_profile</h2><p>한 행 = 행정동 하나, 426행</p><p>
-<a href="v2026.11.16/dong_profile.parquet">dong_profile.parquet</a> (426행, 26,614 B, sha256 <code>d1b2010e81df</code>) 
-<a href="v2026.11.16/dong_profile.csv">dong_profile.csv</a> (426행, 47,536 B, sha256 <code>df44d259f4a2</code>) 
-</p><table><tr><th>컬럼</th><th>타입</th><th>뜻</th><th>원천</th></tr>
-<tr><td><code>dong_id</code></td><td>character(8)</td><td>행정동 코드(통계청), 행정안전부 코드, 이름, 통계청 시군구 코드 (한 줄로 함께 설명: dong_id, mois_dong_cd, dong_nm, sgg_cd)</td><td>통계청 한국행정구역분류 (행정동 코드·이름)</td></tr>
-<tr><td><code>mois_dong_cd</code></td><td>character(8)</td><td>행정동 코드(통계청), 행정안전부 코드, 이름, 통계청 시군구 코드 (한 줄로 함께 설명: dong_id, mois_dong_cd, dong_nm, sgg_cd)</td><td>소상공인시장진흥공단 상가(상권)정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>dong_nm</code></td><td>text</td><td>행정동 코드(통계청), 행정안전부 코드, 이름, 통계청 시군구 코드 (한 줄로 함께 설명: dong_id, mois_dong_cd, dong_nm, sgg_cd)</td><td>통계청 한국행정구역분류 (행정동 코드·이름)</td></tr>
-<tr><td><code>sgg_cd</code></td><td>character(5)</td><td>행정동 코드(통계청), 행정안전부 코드, 이름, 통계청 시군구 코드 (한 줄로 함께 설명: dong_id, mois_dong_cd, dong_nm, sgg_cd)</td><td>통계청 한국행정구역분류 (행정동 코드·이름)</td></tr>
-<tr><td><code>boundary_base_date</code></td><td>date</td><td>면적(㎢), 경계 기준일 (한 줄로 함께 설명: area_km2, boundary_base_date)</td><td>통계청 SGIS 센서스용 행정구역경계(읍면동) 2025-06-30</td></tr>
-<tr><td><code>monthly_deals</code></td><td>bigint</td><td>최근 6개월 신규 월세 계약 수와 보증금·월세 중앙값 (면적 조건 없음) (한 줄로 함께 설명: monthly_deals, monthly_median_deposit_10k_won, monthly_median_rent_10k_won)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대), 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>monthly_median_deposit_10k_won</code></td><td>double precision</td><td>최근 6개월 신규 월세 계약 수와 보증금·월세 중앙값 (면적 조건 없음) (한 줄로 함께 설명: monthly_deals, monthly_median_deposit_10k_won, monthly_median_rent_10k_won)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대), 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>monthly_median_rent_10k_won</code></td><td>double precision</td><td>최근 6개월 신규 월세 계약 수와 보증금·월세 중앙값 (면적 조건 없음) (한 줄로 함께 설명: monthly_deals, monthly_median_deposit_10k_won, monthly_median_rent_10k_won)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대), 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>jeonse_deals</code></td><td>bigint</td><td>최근 6개월 신규 전세 계약 수와 보증금 중앙값 (한 줄로 함께 설명: jeonse_deals, jeonse_median_deposit_10k_won)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대), 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>jeonse_median_deposit_10k_won</code></td><td>double precision</td><td>최근 6개월 신규 전세 계약 수와 보증금 중앙값 (한 줄로 함께 설명: jeonse_deals, jeonse_median_deposit_10k_won)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대), 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>nearest_station_nm</code></td><td>text</td><td>행정동 안 대표점에서 가장 가까운 역(모든 노선) (한 줄로 함께 설명: nearest_station_nm, nearest_station_route, nearest_station_distance_m)</td><td>서울시 역사마스터 정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>nearest_station_route</code></td><td>text</td><td>행정동 안 대표점에서 가장 가까운 역(모든 노선) (한 줄로 함께 설명: nearest_station_nm, nearest_station_route, nearest_station_distance_m)</td><td>서울시 역사마스터 정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>nearest_station_distance_m</code></td><td>numeric</td><td>행정동 안 대표점에서 가장 가까운 역(모든 노선) (한 줄로 함께 설명: nearest_station_nm, nearest_station_route, nearest_station_distance_m)</td><td>서울시 역사마스터 정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>convenience_store</code></td><td>bigint</td><td>필수 5종 업소 수(세탁 = 세탁소 + 셀프 빨래방) (한 줄로 함께 설명: convenience_store, supermarket, pharmacy, internal_pediatric_clinic, laundry)</td><td>소상공인시장진흥공단 상가(상권)정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>supermarket</code></td><td>bigint</td><td>필수 5종 업소 수(세탁 = 세탁소 + 셀프 빨래방) (한 줄로 함께 설명: convenience_store, supermarket, pharmacy, internal_pediatric_clinic, laundry)</td><td>소상공인시장진흥공단 상가(상권)정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>pharmacy</code></td><td>bigint</td><td>필수 5종 업소 수(세탁 = 세탁소 + 셀프 빨래방) (한 줄로 함께 설명: convenience_store, supermarket, pharmacy, internal_pediatric_clinic, laundry)</td><td>소상공인시장진흥공단 상가(상권)정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>internal_pediatric_clinic</code></td><td>bigint</td><td>필수 5종 업소 수(세탁 = 세탁소 + 셀프 빨래방) (한 줄로 함께 설명: convenience_store, supermarket, pharmacy, internal_pediatric_clinic, laundry)</td><td>소상공인시장진흥공단 상가(상권)정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>laundry</code></td><td>bigint</td><td>필수 5종 업소 수(세탁 = 세탁소 + 셀프 빨래방) (한 줄로 함께 설명: convenience_store, supermarket, pharmacy, internal_pediatric_clinic, laundry)</td><td>소상공인시장진흥공단 상가(상권)정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
+<p>공개하지 않는 컬럼(이용조건, 값 없음). 이유 글의 &#x27;결정 113&#x27;은 이 데이터를 만든 프로젝트의 설계 결정 번호, &#x27;OA-12928&#x27;은 서울 열린데이터광장 자료 번호, &#x27;3유형&#x27;은 공공누리 제3유형(출처 표시, 변경 금지), &#x27;6a·6b&#x27;는 혼잡도와 면적의 공개 여부를 다시 판정할 다음 단계 이름, &#x27;약관 제15조&#x27;는 통계청 SGIS 통합 이용약관의 조항(사전 승낙 없는 타인 제공 금지)입니다</p><ul class="excluded"><li>am_peak_congestion: 혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정</li><li>area_km2: SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li><li>convenience_store_per_km2: SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li><li>internal_pediatric_clinic_per_km2: SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li><li>laundry_per_km2: SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li><li>nearest_congestion_station_distance_m: 혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정</li><li>nearest_congestion_station_nm: 혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정</li><li>nearest_congestion_station_route: 혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정</li><li>pharmacy_per_km2: SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li><li>supermarket_per_km2: SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li></ul>
+</section>
+<section><h2>출근 이동 (출발 동 × 직장 동) (commute_od)</h2><p>이 표의 한 줄은 출발 행정동 × 직장 행정동입니다.</p>
+<ul><li><a href="v2026.11.16/commute_od.parquet">v2026.11.16/commute_od.parquet</a> (parquet, 141411행, 2051756바이트, sha256 f60f0550e144a09f80fda400cb2c44a87b85b8a11b39c1a864ead04abdbad87f)</li><li><a href="v2026.11.16/commute_od.csv">v2026.11.16/commute_od.csv</a> (csv, 141411행, 14655426바이트, sha256 48ef829c330a5563cb24679de34e3be775d73632b7ece5ea1dcaa33cad770ce0)</li></ul>
+<p>한 줄을 구분하는 값(키): origin_dong_id, dest_dong_id</p>
+<p>쓰기 전에 알아 둘 것:</p><ul><li>이동 시간은 머문 곳 사이 시간이라 가까운 동일수록 실제보다 길게 나온다. 같은 동 안 이동 426쌍의 평균은 31.3분이지만 가장 긴 곳은 159.9분이고 역삼1동 → 역삼1동도 156.9분이다. 대중교통 길찾기 시간이 아니고 수단 구분도 없다. 시간 한도 이하 또는 직선거리 3km 이내를 함께 쓰기를 권한다.</li><li>이동인구 3명 이하는 원천에서 가려져 평균에서 빠진다. 20~34세가 모두 가려진 경로는 avg_minutes_age20_34가 비어 있고, avg_minutes는 전체 나이 값으로 대신한다.</li><li>이동인구가 아주 적은 쌍은 평균이 크게 흔들린다. 전체 나이 이동인구가 10 미만인 쌍이 9,761개이고, 직선거리 10km 이상인데 10분 미만인 158쌍은 모두 전체 나이 값(basis = all_ages)이며 이동인구가 67 이하다. population_* 컬럼을 함께 보고 인원이 적은 쌍은 빼고 쓰기를 권한다.</li><li>평일 아침 7~9시대에 직장 동에 도착한 출근 방향만 있다. 퇴근 방향 시간은 없다.</li></ul>
+<table><tr><th>컬럼</th><th>한글 이름</th><th>단위</th><th>타입</th><th>설명</th><th>코드 값</th></tr>
+<tr><td>origin_dong_id</td><td>출발 동 코드</td><td></td><td>character(8)</td><td>출근하는 사람이 사는 동(밤에 주로 머무는 곳)의 통계청 동 코드 8자리. dong_profile.dong_id와 이어 동 이름을 붙인다.</td><td></td></tr>
+<tr><td>dest_dong_id</td><td>직장 동 코드</td><td></td><td>character(8)</td><td>출근하는 사람이 낮에 주로 머무는 동(직장)의 통계청 동 코드 8자리.</td><td></td></tr>
+<tr><td>avg_minutes_age20_34</td><td>20~34세 평균 이동 시간(분)</td><td>분</td><td>numeric</td><td>평일 아침 7~9시대에 직장 동에 도착한 20~34세의 이동 시간 평균. 사람 수로 가중했다. 머문 곳 사이 시간이라 가까운 동일수록 실제보다 길다. 대중교통 길찾기 시간이 아니다. 20~34세 이동이 모두 3명 이하로 가려진 경로는 비어 있다.</td><td></td></tr>
+<tr><td>population_age20_34</td><td>20~34세 이동인구 합(명)</td><td>회(6개월 이동 횟수 합)</td><td>numeric</td><td>평균을 낼 때 쓴 20~34세 이동인구를 더한 값. 이동인구 값은 사람 수가 아니라 이동 횟수를 더한 값이다. 원천이 한 달의 같은 요일(예: 그달 모든 월요일)을 더해 주고, 이 표는 그것을 최근 6개 대상월의 평일(월~금), 도착 7·8·9시, 성별을 모두 더했다. 그래서 30이나 10은 약 6개월 동안 더한 이동 횟수다. KT 휴대폰 신호로 잡은 이동을 KT 점유율 등으로 나눠 전체 인구로 키운 추정치라 소수점이 있다. 3명 이하로 가려진 이동은 더하지 않았다.</td><td></td></tr>
+<tr><td>avg_minutes_all_ages</td><td>전체 나이 평균 이동 시간(분)</td><td>분</td><td>numeric</td><td>avg_minutes_age20_34와 같은 방법으로 낸 모든 나이의 평균. 240분이 넘는 원천 행은 이상값으로 빼고 계산했다.</td><td></td></tr>
+<tr><td>population_all_ages</td><td>전체 나이 이동인구 합(명)</td><td>회(6개월 이동 횟수 합)</td><td>numeric</td><td>평균을 낼 때 쓴 모든 나이의 이동인구 합. 이동인구 값은 사람 수가 아니라 이동 횟수를 더한 값이다. 원천이 한 달의 같은 요일(예: 그달 모든 월요일)을 더해 주고, 이 표는 그것을 최근 6개 대상월의 평일(월~금), 도착 7·8·9시, 성별을 모두 더했다. 그래서 30이나 10은 약 6개월 동안 더한 이동 횟수다. KT 휴대폰 신호로 잡은 이동을 KT 점유율 등으로 나눠 전체 인구로 키운 추정치라 소수점이 있다. 10 미만인 쌍은 평균이 크게 흔들린다.</td><td></td></tr>
+<tr><td>avg_minutes</td><td>권장 평균 이동 시간(분)</td><td>분</td><td>numeric</td><td>20~34세 이동인구가 30 이상이면 20~34세 값, 아니면 전체 나이 값이다. 어느 쪽인지는 basis에 있다. 30보다 적으면 20~34세 평균이 크게 흔들려 정한 기준이다.</td><td></td></tr>
+<tr><td>basis</td><td>권장 값의 기준</td><td></td><td>text</td><td>avg_minutes가 어느 나이 값을 썼는지 알려 준다.</td><td>age20_34 = 20~34세 값을 씀(20~34세 30 이상); all_ages = 전체 나이 값으로 대신함(20~34세 30 미만)</td></tr>
+<tr><td>copied_from_2021_split_dong</td><td>2021년 값 복사 여부</td><td></td><td>boolean</td><td>2021년 뒤 나뉜 동(상일1·2동, 오류2동·항동)은 생활이동에 따로 값이 없어 2021년 동의 값을 복사했다. 그런 행이면 true다.</td><td>true = 2021년 동의 값을 복사한 행; false = 원천 값으로 계산한 행</td></tr>
+<tr><td>distance_km</td><td>두 동 사이 직선거리(km)</td><td>km</td><td>numeric</td><td>두 동의 안쪽 대표점(동 도형 안에 반드시 들어가는 점. 무게중심은 동 밖에 떨어지는 동이 있어 쓰지 않음) 사이를 곧게 잰 거리. 실제 길 거리가 아니다. 가까운 동의 이동 시간이 길게 나오는 약점을 메우려 준다. 권장: 시간 한도 이하 또는 3km 이내.</td><td></td></tr>
+<tr><td>target_months</td><td>값을 낸 대상 달</td><td></td><td>text</td><td>이 경로가 나온 생활이동 대상연월(YYYYMM)을 쉼표로 이은 글자. 최근 6개 대상연월 안에서 나온 달만 적는다. 기간 전체는 홈 화면 &#x27;신선도&#x27; 표의 생활이동 대상월(commute_months)에 있다.</td><td></td></tr>
 </table>
-<p>공개하지 않는 컬럼:</p><ul>
-<li><code>am_peak_congestion</code> (numeric): 혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정</li>
-<li><code>area_km2</code> (numeric(8,3)): SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li>
-<li><code>convenience_store_per_km2</code> (numeric): SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li>
-<li><code>internal_pediatric_clinic_per_km2</code> (numeric): SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li>
-<li><code>laundry_per_km2</code> (numeric): SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li>
-<li><code>nearest_congestion_station_distance_m</code> (numeric): 혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정</li>
-<li><code>nearest_congestion_station_nm</code> (text): 혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정</li>
-<li><code>nearest_congestion_station_route</code> (text): 혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정</li>
-<li><code>pharmacy_per_km2</code> (numeric): SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li>
-<li><code>supermarket_per_km2</code> (numeric): SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개</li>
-</ul>
-<h2>commute_od</h2><p>한 행 = 출발 행정동 × 직장 행정동</p><p>
-<a href="v2026.11.16/commute_od.parquet">commute_od.parquet</a> (141,411행, 2,051,756 B, sha256 <code>f60f0550e144</code>) 
-<a href="v2026.11.16/commute_od.csv">commute_od.csv</a> (141,411행, 14,655,426 B, sha256 <code>48ef829c330a</code>) 
-</p><table><tr><th>컬럼</th><th>타입</th><th>뜻</th><th>원천</th></tr>
-<tr><td><code>origin_dong_id</code></td><td>character(8)</td><td>출발(야간상주지), 직장(주간상주지) 행정동 (한 줄로 함께 설명: origin_dong_id, dest_dong_id)</td><td>통계청 한국행정구역분류 (행정동 코드·이름), 서울 생활이동 (서울특별시·KT)</td></tr>
-<tr><td><code>dest_dong_id</code></td><td>character(8)</td><td>출발(야간상주지), 직장(주간상주지) 행정동 (한 줄로 함께 설명: origin_dong_id, dest_dong_id)</td><td>통계청 한국행정구역분류 (행정동 코드·이름), 서울 생활이동 (서울특별시·KT)</td></tr>
-<tr><td><code>avg_minutes_age20_34</code></td><td>numeric</td><td>20~34세의 이동인구 가중 평균 이동 시간, 가려지지 않은 이동인구 합 (한 줄로 함께 설명: avg_minutes_age20_34, population_age20_34)</td><td>서울 생활이동 (서울특별시·KT)</td></tr>
-<tr><td><code>population_age20_34</code></td><td>numeric</td><td>20~34세의 이동인구 가중 평균 이동 시간, 가려지지 않은 이동인구 합 (한 줄로 함께 설명: avg_minutes_age20_34, population_age20_34)</td><td>서울 생활이동 (서울특별시·KT)</td></tr>
-<tr><td><code>avg_minutes_all_ages</code></td><td>numeric</td><td>전체 나이 (한 줄로 함께 설명: avg_minutes_all_ages, population_all_ages)</td><td>서울 생활이동 (서울특별시·KT)</td></tr>
-<tr><td><code>population_all_ages</code></td><td>numeric</td><td>전체 나이 (한 줄로 함께 설명: avg_minutes_all_ages, population_all_ages)</td><td>서울 생활이동 (서울특별시·KT)</td></tr>
-<tr><td><code>avg_minutes</code></td><td>numeric</td><td>권장 값. 20~34세 이동인구 합이 30 이상이면 20~34세, 아니면 전체 나이. 30 미만에서는 두 평균의 차이가 크게 흔들려서 정한 기준(결정 22) (한 줄로 함께 설명: avg_minutes, basis)</td><td>서울 생활이동 (서울특별시·KT)</td></tr>
-<tr><td><code>basis</code></td><td>text</td><td>권장 값. 20~34세 이동인구 합이 30 이상이면 20~34세, 아니면 전체 나이. 30 미만에서는 두 평균의 차이가 크게 흔들려서 정한 기준(결정 22) (한 줄로 함께 설명: avg_minutes, basis)</td><td>서울 생활이동 (서울특별시·KT)</td></tr>
-<tr><td><code>copied_from_2021_split_dong</code></td><td>boolean</td><td>2021년 이후 나뉜 동(상일1·2동, 오류2동·항동)에 2021년 값을 복사한 행</td><td>서울 생활이동 (서울특별시·KT)</td></tr>
-<tr><td><code>distance_km</code></td><td>numeric</td><td>두 행정동 안 대표점 사이 직선거리(km). 이동 시간이 근거리에서 길게 나오는 약점을 보완한다(결정 23). 권장 사용: 이동 시간 한도 이하 또는 3km 이내</td><td>우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>target_months</code></td><td>text</td><td>원천 대상연월. 생활이동이 있는 최근 6개 대상연월 안에서 이 경로가 나온 달 (결정 36)</td><td>서울 생활이동 (서울특별시·KT)</td></tr>
+</section>
+<section><h2>전월세 계약 (rent_listing)</h2><p>이 표의 한 줄은 최근 계약월(최대 6개월) 신규 전월세 계약 한 건입니다.</p>
+<ul><li><a href="v2026.11.16/rent_listing.parquet">v2026.11.16/rent_listing.parquet</a> (parquet, 62691행, 480288바이트, sha256 64f777d6ca27dcbe57d1109302e7fec6fd9630b4bb34caf03c598053ca335906)</li><li><a href="v2026.11.16/rent_listing.csv">v2026.11.16/rent_listing.csv</a> (csv, 62691행, 5405771바이트, sha256 9f1290db45d28d60de5aa55e9ea793211a39546eb482c46c22631124be2aeae6)</li></ul>
+<p>한 줄을 구분하는 값(키): 없음(거래 고유 키가 없다. 동·호를 주지 않음)</p>
+<p>쓰기 전에 알아 둘 것:</p><ul><li>&#x27;최대 6개월&#x27;은 상한이다. 실제 계약월은 버전마다 다르고 홈 화면 &#x27;신선도&#x27; 표의 전월세 계약월(rent_months)에 있다(v2026.11.16은 202606~202610, 5개월).</li><li>신규(새로 맺은) 계약만 센다. 갱신 계약은 빼서, 지금 새로 구하는 사람이 받을 수 있는 가격에 가깝게 했다.</li><li>오피스텔과 연립다세대만 있다. 단독·다가구(원룸 포함) 전월세는 지번이 없어 빠졌다.</li><li>최근 달은 신고가 다 들어오지 않아 건수가 적을 수 있다(계약 뒤 30일 안 신고).</li></ul>
+<table><tr><th>컬럼</th><th>한글 이름</th><th>단위</th><th>타입</th><th>설명</th><th>코드 값</th></tr>
+<tr><td>dong_id</td><td>동 코드(통계청)</td><td></td><td>character(8)</td><td>계약한 집이 있는 땅(필지: 지번 하나로 나뉜 땅 한 덩어리)이 속한 통계청 행정동 코드 8자리. dong_profile과 이을 때 쓴다.</td><td></td></tr>
+<tr><td>mois_dong_cd</td><td>동 코드(행정안전부)</td><td></td><td>character(8)</td><td>그 동의 대표 행정안전부 코드.</td><td></td></tr>
+<tr><td>dong_nm</td><td>동 이름</td><td></td><td>text</td><td>그 동의 통계청 이름. 같은 이름이 있으니 표를 이을 때는 dong_id를 쓴다.</td><td></td></tr>
+<tr><td>source_type</td><td>주택 종류</td><td></td><td>text</td><td>어느 실거래가 자료에서 왔는지.</td><td>offi = 오피스텔; rh = 연립다세대</td></tr>
+<tr><td>house_type</td><td>연립다세대 세부 유형</td><td></td><td>text</td><td>연립다세대 계약의 주택 유형(원천 값 그대로). 오피스텔 계약은 비어 있다.</td><td>다세대 = 다세대주택; 연립 = 연립주택; 연립다세대 = 원천에 &#x27;연립다세대&#x27;로 적힌 행. 연립인지 다세대인지는 원천에 따로 없다</td></tr>
+<tr><td>lease_type</td><td>전세·월세 구분</td><td></td><td>text</td><td>월세가 0보다 크면 월세, 0이면 전세다. 전세를 월세로 바꿔 계산하지 않았다.</td><td>월세 = 월세가 0보다 큰 계약; 전세 = 월세가 0인 계약</td></tr>
+<tr><td>deal_ymd</td><td>계약년월(YYYYMM)</td><td></td><td>character(6)</td><td>계약한 달을 글자 6자리로 적은 값. 신규(새로 맺은) 계약만 센다. 갱신 계약은 빼서, 지금 새로 구하는 사람이 받을 수 있는 가격에 가깝게 했다. 이 표의 기간은 홈 화면 &#x27;신선도&#x27; 표의 전월세 계약월(rent_months)이다. 최근 달은 신고가 덜 들어와 건수가 적을 수 있다.</td><td></td></tr>
+<tr><td>deal_date</td><td>계약일</td><td></td><td>date</td><td>계약한 날짜.</td><td></td></tr>
+<tr><td>deposit_10k_won</td><td>보증금(만원)</td><td>만원</td><td>integer</td><td>계약 보증금. 단위는 만원이다(예: 3000 = 3천만 원).</td><td></td></tr>
+<tr><td>monthly_rent_10k_won</td><td>월세(만원)</td><td>만원</td><td>integer</td><td>한 달 월세. 단위는 만원이고 전세는 0이다.</td><td></td></tr>
+<tr><td>excl_area_m2</td><td>전용면적(㎡)</td><td>㎡</td><td>numeric(7,2)</td><td>집 안에서 혼자 쓰는 면적(제곱미터).</td><td></td></tr>
+<tr><td>floor</td><td>층</td><td>층</td><td>integer</td><td>계약한 집의 층. 지하는 음수다.</td><td></td></tr>
+<tr><td>build_year</td><td>건축년도</td><td>년</td><td>integer</td><td>건물을 지은 해. 일부 계약은 비어 있다.</td><td></td></tr>
 </table>
-<h2>rent_listing</h2><p>한 행 = 최근 6개월 신규 전월세 계약 한 건</p><p>
-<a href="v2026.11.16/rent_listing.parquet">rent_listing.parquet</a> (62,691행, 480,288 B, sha256 <code>64f777d6ca27</code>) 
-<a href="v2026.11.16/rent_listing.csv">rent_listing.csv</a> (62,691행, 5,405,771 B, sha256 <code>9f1290db45d2</code>) 
-</p><table><tr><th>컬럼</th><th>타입</th><th>뜻</th><th>원천</th></tr>
-<tr><td><code>dong_id</code></td><td>character(8)</td><td>거래 필지가 속한 행정동 (한 줄로 함께 설명: dong_id, mois_dong_cd, dong_nm)</td><td>통계청 한국행정구역분류 (행정동 코드·이름), 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>mois_dong_cd</code></td><td>character(8)</td><td>거래 필지가 속한 행정동 (한 줄로 함께 설명: dong_id, mois_dong_cd, dong_nm)</td><td>소상공인시장진흥공단 상가(상권)정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>dong_nm</code></td><td>text</td><td>거래 필지가 속한 행정동 (한 줄로 함께 설명: dong_id, mois_dong_cd, dong_nm)</td><td>통계청 한국행정구역분류 (행정동 코드·이름), 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>source_type</code></td><td>text</td><td>offi(오피스텔) / rh(연립다세대), 연립다세대의 주택 유형 (한 줄로 함께 설명: source_type, house_type)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대)</td></tr>
-<tr><td><code>house_type</code></td><td>text</td><td>offi(오피스텔) / rh(연립다세대), 연립다세대의 주택 유형 (한 줄로 함께 설명: source_type, house_type)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대)</td></tr>
-<tr><td><code>lease_type</code></td><td>text</td><td>월세(월세 &gt; 0) / 전세(월세 = 0)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대)</td></tr>
-<tr><td><code>deal_ymd</code></td><td>character(6)</td><td>계약년월, 계약일 (한 줄로 함께 설명: deal_ymd, deal_date)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대)</td></tr>
-<tr><td><code>deal_date</code></td><td>date</td><td>계약년월, 계약일 (한 줄로 함께 설명: deal_ymd, deal_date)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대)</td></tr>
-<tr><td><code>deposit_10k_won</code></td><td>integer</td><td>보증금, 월세, 전용면적, 층(지하는 음수), 건축년도 (한 줄로 함께 설명: deposit_10k_won, monthly_rent_10k_won, excl_area_m2, floor, build_year)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대)</td></tr>
-<tr><td><code>monthly_rent_10k_won</code></td><td>integer</td><td>보증금, 월세, 전용면적, 층(지하는 음수), 건축년도 (한 줄로 함께 설명: deposit_10k_won, monthly_rent_10k_won, excl_area_m2, floor, build_year)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대)</td></tr>
-<tr><td><code>excl_area_m2</code></td><td>numeric(7,2)</td><td>보증금, 월세, 전용면적, 층(지하는 음수), 건축년도 (한 줄로 함께 설명: deposit_10k_won, monthly_rent_10k_won, excl_area_m2, floor, build_year)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대)</td></tr>
-<tr><td><code>floor</code></td><td>integer</td><td>보증금, 월세, 전용면적, 층(지하는 음수), 건축년도 (한 줄로 함께 설명: deposit_10k_won, monthly_rent_10k_won, excl_area_m2, floor, build_year)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대)</td></tr>
-<tr><td><code>build_year</code></td><td>integer</td><td>보증금, 월세, 전용면적, 층(지하는 음수), 건축년도 (한 줄로 함께 설명: deposit_10k_won, monthly_rent_10k_won, excl_area_m2, floor, build_year)</td><td>국토교통부 전월세 실거래가 (오피스텔, 연립다세대)</td></tr>
+</section>
+<section><h2>행정동 코드 대응표 (행정안전부 → 통계청) (dong_mois_map)</h2><p>이 표의 한 줄은 행정안전부 행정동 코드 하나입니다.</p>
+<ul><li><a href="v2026.11.16/dong_mois_map.parquet">v2026.11.16/dong_mois_map.parquet</a> (parquet, 427행, 12031바이트, sha256 214717bec8973afc9920835214a5e1c6de2b734ac6042894a6a0d2aadfbbd207)</li><li><a href="v2026.11.16/dong_mois_map.csv">v2026.11.16/dong_mois_map.csv</a> (csv, 427행, 19457바이트, sha256 c2df8c01a2b62a4897194736182c2603966aa0f24aea99901e62339b001cdf06)</li></ul>
+<p>한 줄을 구분하는 값(키): mois_dong_cd</p>
+<p>쓰기 전에 알아 둘 것:</p><ul><li>이 대응표는 상가정보 업소의 코드 표기로 만든 것이다. 행정안전부 공식 대응표와 대조하지 않았다.</li></ul>
+<table><tr><th>컬럼</th><th>한글 이름</th><th>단위</th><th>타입</th><th>설명</th><th>코드 값</th></tr>
+<tr><td>mois_dong_cd</td><td>동 코드(행정안전부)</td><td></td><td>character(8)</td><td>행정안전부가 쓰는 행정동 코드 8자리. 이 표의 키다. 행정안전부 코드를 쓰는 시스템과 맞출 때 이 표로 통계청 dong_id를 찾는다.</td><td></td></tr>
+<tr><td>dong_id</td><td>동 코드(통계청)</td><td></td><td>character(8)</td><td>그 행정안전부 코드가 속한 통계청 2025 행정동 코드 8자리. 용신동(11060810)만 두 행에 나온다.</td><td></td></tr>
+<tr><td>dong_nm</td><td>동 이름</td><td></td><td>text</td><td>통계청 2025 행정동 이름. 같은 이름의 동이 있어(신사동: 강남구·관악구) 이름으로 표를 잇지 않는다.</td><td></td></tr>
+<tr><td>is_primary</td><td>대표 코드 여부</td><td></td><td>boolean</td><td>그 동의 대표 행정안전부 코드인지. 대표 코드는 dong_profile.mois_dong_cd와 같다.</td><td>true = 그 동의 대표 코드; false = 대표가 아닌 추가 코드(이 버전은 용신동의 11230533 하나)</td></tr>
+<tr><td>stores</td><td>근거 업소 수(곳)</td><td>곳</td><td>integer</td><td>그 동 경계 안 상가 업소(전체 업종) 가운데 이 행정안전부 코드를 가진 업소 수. 대응을 정한 근거다.</td><td></td></tr>
+<tr><td>share</td><td>근거 업소 비율(0~1)</td><td>비율</td><td>numeric(4,3)</td><td>그 동 안 업소 가운데 이 코드를 가진 업소의 비율. 1이면 모두 이 코드다. 둘로 나뉘는 동은 용신동뿐이다(0.548, 0.452).</td><td></td></tr>
 </table>
-<h2>dong_mois_map</h2><p>한 행 = 행정안전부 행정동 코드 하나, 427행</p><p>
-<a href="v2026.11.16/dong_mois_map.parquet">dong_mois_map.parquet</a> (427행, 12,031 B, sha256 <code>214717bec897</code>) 
-<a href="v2026.11.16/dong_mois_map.csv">dong_mois_map.csv</a> (427행, 19,457 B, sha256 <code>c2df8c01a2b6</code>) 
-</p><table><tr><th>컬럼</th><th>타입</th><th>뜻</th><th>원천</th></tr>
-<tr><td><code>mois_dong_cd</code></td><td>character(8)</td><td>행정안전부 행정동 코드 8자리 (키)</td><td>소상공인시장진흥공단 상가(상권)정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>dong_id</code></td><td>character(8)</td><td>그 코드가 속한 통계청 2025 행정동 (한 줄로 함께 설명: dong_id, dong_nm)</td><td>통계청 한국행정구역분류 (행정동 코드·이름), 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>dong_nm</code></td><td>text</td><td>그 코드가 속한 통계청 2025 행정동 (한 줄로 함께 설명: dong_id, dong_nm)</td><td>통계청 한국행정구역분류 (행정동 코드·이름)</td></tr>
-<tr><td><code>is_primary</code></td><td>boolean</td><td>그 행정동의 대표 코드 여부 (dong_profile.mois_dong_cd와 같음)</td><td>소상공인시장진흥공단 상가(상권)정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>stores</code></td><td>integer</td><td>근거: 그 행정동 경계 안 상가 업소(전체 업종) 중 이 코드를 가진 업소 수와 비율. 2026-11-13 전에는 필수 5종 업소만 셌다(7절) (한 줄로 함께 설명: stores, share)</td><td>소상공인시장진흥공단 상가(상권)정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-<tr><td><code>share</code></td><td>numeric(4,3)</td><td>근거: 그 행정동 경계 안 상가 업소(전체 업종) 중 이 코드를 가진 업소 수와 비율. 2026-11-13 전에는 필수 5종 업소만 셌다(7절) (한 줄로 함께 설명: stores, share)</td><td>소상공인시장진흥공단 상가(상권)정보, 우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)</td></tr>
-</table>
-<h2>URL로 바로 가져가기</h2>
-<p>버전 폴더의 파일은 바뀌지 않는다. 늘 최신을 쓰려면 latest.json에서 버전을 읽는다.</p>
-<pre># pandas (CSV는 UTF-8 BOM)
-import pandas as pd
-df = pd.read_csv(&quot;https://sozerong.github.io/home_in_seoul-data/v2026.11.16/dong_profile.csv&quot;, dtype={&quot;dong_id&quot;: str, &quot;mois_dong_cd&quot;: str, &quot;sgg_cd&quot;: str})
+</section>
+<p>설명의 근거로 적은 파일(data_contract.md, decisions.md 등)은 코드 레포 <a href="https://github.com/sozerong/home_in_seoul">https://github.com/sozerong/home_in_seoul</a>에 있습니다.</p>
+</main>
+</div>
+<div class="toast" id="toast"></div>
+<noscript><p style="padding:20px">JavaScript가 꺼져 있어 위의 요약만 보입니다. 미리보기·프로필·SQL 편집기는 JavaScript가 필요합니다.</p></noscript>
 
-# 최신 버전 찾기
-import json, urllib.request
-latest = json.load(urllib.request.urlopen(&quot;https://sozerong.github.io/home_in_seoul-data/latest.json&quot;))[&quot;version&quot;]
+<script type="module">
+// 서버 없는 데이터 포털: catalog.json·manifest·profiles/<버전>.json만 읽고, SQL과 미리보기는 브라우저 안 DuckDB-WASM이
+// 이 사이트의 공개 Parquet를 직접 읽는다. 질의와 결과는 어떤 서버로도 보내지 않는다.
+const DUCKDB_ESM = window.DUCKDB_ESM || 'https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.33.1-dev57.0/+esm';
+const SHOW_ROWS = 1000;      // 결과 표에 그리는 행 수
+const KEEP_ROWS = 20000;     // 정렬을 위해 브라우저 메모리에 꺼내 두는 최대 행 수. CSV 내려받기는 전체 행
 
--- DuckDB (https 주소는 httpfs 확장으로 읽는다. 필요한 열과 행 그룹만 범위 요청으로 받는다)
-INSTALL httpfs; LOAD httpfs;
-SELECT lease_type, count(*), median(monthly_rent_10k_won) FROM &#x27;https://sozerong.github.io/home_in_seoul-data/v2026.11.16/rent_listing.parquet&#x27; GROUP BY lease_type;</pre>
-<p>dong_id(통계청 8자리)로 표를 잇는다. 동 이름은 서울 안에서도 겹친다(예: 신사동이 강남구와 관악구에 있다).</p>
-<h2>버전</h2><table><tr><th>버전</th><th>만든 시각</th><th>manifest</th></tr>
-<tr><td>v2026.11.16</td><td>2026-11-16T13:33:47+09:00</td><td><a href="v2026.11.16/manifest.json">manifest.json</a></td></tr>
-</table>
-<h2>출처</h2><p>이용조건 확인 날짜 2026-11-22. 법률 검토 아님. 근거는 docs/data_contract.md 5절. 공공기관이 이 데이터를 후원하거나 보증하지 않는다.</p><ul>
-<li>계산 방법: data_contract.md 2·3절</li>
-<li>통계청 한국행정구역분류</li>
-<li>국토교통부 전월세 실거래가 자료(공공데이터포털) <a href="https://www.data.go.kr/data/15126475/openapi.do">링크</a> <a href="https://www.data.go.kr/data/15126473/openapi.do">링크</a></li>
-<li>소상공인시장진흥공단 상가(상권)정보(공공데이터포털) <a href="https://www.data.go.kr/data/15083033/fileData.do">링크</a></li>
-<li>공공누리 제1유형에 따라 서울특별시 &#x27;서울 생활이동&#x27; 데이터 이용. 출처: 서울특별시·KT, 서울시 통신데이터 <a href="https://data.seoul.go.kr/dataVisual/seoul/seoulLivingMigration.do">링크</a> <a href="https://www.data.go.kr/data/15087677/fileData.do">링크</a> <a href="https://data.seoul.go.kr/dataList/OA-22657/F/1/datasetView.do">링크</a></li>
-<li>공공누리 제1유형에 따라 서울특별시 &#x27;서울시 역사마스터 정보&#x27; 이용 <a href="https://data.seoul.go.kr/dataList/OA-21232/F/1/datasetView.do">링크</a></li>
-<li>통계청 SGIS 센서스용 행정구역경계(읍면동) 2025-06-30 <a href="https://sgis.mods.go.kr/view/member/clause">링크</a> <a href="https://sgis.mods.go.kr/jsp/member/copyright.jsp">링크</a></li>
-</ul></body></html>
+const LABELS = {
+  sources: {rent_months: '전월세 계약월', rent_collected_date: '전월세 수집일', commute_months: '생활이동 대상월',
+    congestion_collected_date: '혼잡도 수집일(혼잡도 컬럼은 이용조건 때문에 공개 파일에서 뺐고, 이 날짜만 남김)', store_collected_date: '상가정보 수집일', boundary_base_date: '행정동 경계 기준일'},
+  quality: {rent_quarantine_rows: '전월세: 검사에서 걸러 따로 둔 행', commute_quarantine_rows: '생활이동: 검사에서 걸러 따로 둔 행', dongs_without_mois_code: '행정안전부 코드가 없는 동',
+    commute_pairs_age20_34_basis: '20~34세 값으로 낸 출근 쌍', commute_pairs_all_ages_basis: '전체 나이 값으로 대신한 출근 쌍',
+    dongs_without_monthly_rent_deal: '월세 계약이 없는 동'},
+  // 품질 지표마다 "이 숫자가 뜻하는 것". 근거: data_contract.md 3·4절, docs/public_columns.json의 컬럼 설명
+  qualityMeaning: {
+    rent_quarantine_rows: (v) => `전월세 원천 행 가운데 검증 규칙을 어겨 상품에서 뺀 행이 ${v}개입니다. 상품 파일에는 들어 있지 않습니다.`,
+    commute_quarantine_rows: (v) => `생활이동 원천 행 가운데 검사에서 걸러 따로 둔 행이 ${v}개입니다. 출근 표가 쓰지 않는 행(출근이 아닌 이동유형, 주말, 아침 7~9시 밖)과, 위반 비율이 기준을 넘어 그 달 전체를 받지 않은 달의 행도 함께 세므로, 출근 표 계산에서 빠진 행 수와 같지 않습니다. 사유별 내역은 이 사이트에 없습니다.`,
+    dongs_without_mois_code: (v) => `행정안전부 동 코드(mois_dong_cd)를 정하지 못한 동이 ${v}곳입니다.`,
+    commute_pairs_age20_34_basis: (v) => `commute_od에서 권장 시간(avg_minutes)을 20~34세 값으로 낸 출발·직장 쌍이 ${v}개입니다(basis = age20_34).`,
+    commute_pairs_all_ages_basis: (v) => `20~34세 이동인구(6개월 동안 더한 이동 횟수)가 30보다 적어 전체 나이 값으로 대신한 쌍이 ${v}개입니다(basis = all_ages).`,
+    dongs_without_monthly_rent_deal: (v) => `기간 안에 신규 월세 계약이 없는 동이 ${v}곳입니다. 이 동들은 dong_profile의 월세 계약 수와 월세 중앙값이 0이 아니라 비어 있습니다.`,
+  },
+};
+const EXAMPLES = [
+  ['표별 행 수', '표마다 몇 줄이 들어 있나', `-- 표 네 개의 줄 수를 한 번에 센다
+SELECT 'dong_profile' AS table_name, count(*) AS rows FROM dong_profile
+UNION ALL SELECT 'commute_od', count(*) FROM commute_od
+UNION ALL SELECT 'rent_listing', count(*) FROM rent_listing
+UNION ALL SELECT 'dong_mois_map', count(*) FROM dong_mois_map;`],
+  ['컬럼 요약 통계 (SUMMARIZE)', '전월세 계약 표의 컬럼마다 최솟값·최댓값·비어 있는 비율은', `-- SUMMARIZE는 컬럼마다 최솟값, 최댓값, 서로 다른 값 수, 비어 있는 비율을 보여 준다
+SUMMARIZE rent_listing;`],
+  ['구별 오피스텔 월세 중앙값', '구마다 오피스텔 월세가 가운데쯤 얼마인가', `-- 구(sgg_cd)마다 오피스텔 월세 계약의 월세 가운데 값(만원)
+-- rent_listing에는 구 코드가 없어서 dong_id로 dong_profile과 잇는다
+SELECT p.sgg_cd,
+       count(*) AS deals,                                         -- 계약 수
+       quantile_cont(r.monthly_rent_10k_won, 0.5) AS median_rent_10k_won  -- 월세 가운데 값(만원)
+FROM rent_listing r
+JOIN dong_profile p USING (dong_id)
+WHERE r.source_type = 'offi'          -- 오피스텔만
+  AND r.lease_type = '월세'
+  AND r.monthly_rent_10k_won > 0
+GROUP BY p.sgg_cd
+ORDER BY median_rent_10k_won DESC;`],
+  ['강남구 동 목록', '강남구에는 어떤 동이 있나', `-- 강남구의 통계청 구 코드는 '11230'(글자). 행정안전부식 11680과 다르다
+SELECT dong_id, dong_nm, monthly_deals, monthly_median_rent_10k_won
+FROM dong_profile
+WHERE sgg_cd = '11230'
+ORDER BY dong_nm;`],
+  ['역삼1동 출근 60분 이내 또는 3km 이내 + 월세', '역삼1동으로 출근하기 괜찮은 동과 그 동의 월세는', `-- 직장이 역삼1동일 때 출발 동별 20~34세 평균 이동 시간과 그 동의 월세 가운데 값.
+-- 생활이동의 이동 시간은 머문 곳 사이 시간이라 가까운 동일수록 실제보다 길게 나온다(계약 6절 1).
+-- 그래서 시간 한도 또는 직선거리 3km 이내를 함께 쓴다.
+SELECT o.dong_nm AS origin_dong_nm,
+       c.avg_minutes_age20_34,             -- 20~34세 평균 이동 시간(분)
+       c.distance_km,                      -- 두 동 사이 직선거리(km)
+       o.monthly_median_rent_10k_won,      -- 출발 동의 월세 가운데 값(만원)
+       o.monthly_median_deposit_10k_won,
+       o.nearest_station_nm
+FROM commute_od c
+JOIN dong_profile o ON o.dong_id = c.origin_dong_id
+WHERE c.dest_dong_id = (SELECT dong_id FROM dong_profile WHERE dong_nm = '역삼1동')
+  AND (c.avg_minutes_age20_34 <= 60 OR c.distance_km <= 3)
+ORDER BY o.monthly_median_rent_10k_won NULLS LAST;`],
+  ['계약월별 전세·월세 건수', '달마다 전세와 월세 계약이 몇 건인가', `-- 계약년월(deal_ymd)과 전세·월세별 계약 수. 최근 달은 신고가 덜 들어와 적을 수 있다
+SELECT deal_ymd, lease_type, count(*) AS deals
+FROM rent_listing
+GROUP BY ALL
+ORDER BY deal_ymd, lease_type;`],
+  ['편의점이 많은 동 20개', '편의점이 가장 많은 동은 어디인가', `-- 동 경계 안 업소 수(곳). 면적으로 나눈 밀도는 이용조건 때문에 공개하지 않는다
+SELECT dong_nm, sgg_cd, convenience_store, pharmacy, laundry
+FROM dong_profile
+ORDER BY convenience_store DESC
+LIMIT 20;`],
+  ['스키마 보기 (DESCRIBE)', '출근 이동 표에는 어떤 컬럼이 있나', `-- 컬럼 이름과 타입
+DESCRIBE commute_od;`],
+];
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const nf = new Intl.NumberFormat('ko-KR');
+const fmtNum = (v, d = 2) => v == null ? '' : (Number.isInteger(v) ? nf.format(v) : new Intl.NumberFormat('ko-KR', {maximumFractionDigits: d}).format(v));
+const fmtBytes = (b) => b >= 1048576 ? (b / 1048576).toFixed(2) + ' MB' : b >= 1024 ? (b / 1024).toFixed(1) + ' KB' : b + ' B';
+const pct = (a, b) => b ? (100 * a / b) : 0;
+const grainText = (g) => '이 표의 한 줄은 ' + g.replace(/^한 행 = /, '').replace(/, [\d,]+행$/, '') + '입니다';
+const colOf = (table, name) => ds(table)?.columns.find((c) => c.name === name);
+const labelCell = (c) => `<div class="lbl">${esc(c.label)}</div><div class="eng">${esc(c.name)}</div>`;
+const valuesHtml = (c) => c.values ? '<div class="note">' + Object.entries(c.values).map(([k, v]) => `<span class="mono">${esc(k)}</span> = ${esc(v)}`).join(' · ') + '</div>' : '';
+// 근거 글의 파일 이름(data_contract.md, warehouse/....sql 등)을 코드 레포(catalog.repository)의 파일 링크로 바꾼다
+function refHtml(ref) {
+  const repo = S.catalog.repository;
+  return esc(ref).replace(/((?:docs|warehouse|transform|measure)\/[\w\/.-]+\.(?:md|sql|py|json)|\b[\w-]+\.md)\b/g, (m) => {
+    const path = m.includes('/') ? m : (m === 'CLAUDE.md' || m === 'README.md' ? m : 'docs/' + m);
+    return repo ? `<a href="${esc(repo)}/blob/main/${path}" target="_blank" rel="noopener">${m}</a>` : m;
+  });
+}
+// 비공개 이유 글(공개 manifest라 바꿀 수 없음)의 내부 용어 풀이. publish_site.py EXCLUDED_TERMS와 같은 문구
+const EXCLUDED_TERMS = "이유 글의 '결정 113'은 이 데이터를 만든 프로젝트의 설계 결정 번호, 'OA-12928'은 서울 열린데이터광장 자료 번호, '3유형'은 공공누리 제3유형(출처 표시, 변경 금지), '6a·6b'는 혼잡도와 면적의 공개 여부를 다시 판정할 다음 단계 이름, '약관 제15조'는 통계청 SGIS 통합 이용약관의 조항(사전 승낙 없는 타인 제공 금지)입니다";
+function notesHtml(d) { return `<div class="notes"><b>쓰기 전에 알아 둘 것</b><ul>${d.notes.map((n) => `<li>${esc(n.text)} <span class="ref">(근거: ${refHtml(n.source_ref)})</span></li>`).join('')}</ul></div>`; }
+const pgType = (t) => t.replace('double precision', 'double').replace('character', 'char');
+
+const S = {catalog: null, version: null, manifests: {}, profiles: {}, conn: null, engine: null, viewsFor: null, last: null, sort: null};
+
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 1600); }
+async function copy(text) { try { await navigator.clipboard.writeText(text); toast('복사했습니다'); } catch { toast('복사하지 못했습니다'); } }
+async function getJson(url) { const r = await fetch(url, {cache: 'no-cache'}); if (!r.ok) throw new Error(`${url} 응답 ${r.status}`); return r.json(); }
+const store = {get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }};
+
+const ds = (name) => S.catalog.datasets.find((d) => d.identifier === name);
+const fileOf = (d, fmt, v = S.version) => d.distributions.find((x) => x.version === v && x.format === fmt);
+const absUrl = (rel) => new URL(rel, location.href).href;
+async function manifest(v = S.version) { return S.manifests[v] ??= await getJson(S.catalog.versions.find((x) => x.version === v).manifest); }
+async function profile(v = S.version) { return S.profiles[v] ??= await getJson(S.catalog.profiles[v]); }
+function sourceNames(srcs) { return srcs.map((s) => S.catalog.licenses[s]?.name || s); }
+
+// ---------- DuckDB-WASM ----------
+async function getConn(status) {
+  if (S.conn) return S.conn;
+  status?.('SQL 엔진(DuckDB-WASM)을 내려받는 중... 처음 한 번만 몇 초 걸립니다');
+  const duckdb = await import(DUCKDB_ESM);
+  const bundle = await duckdb.selectBundle(window.DUCKDB_BUNDLES || duckdb.getJsDelivrBundles());
+  // CDN의 워커 스크립트는 다른 출처라 바로 못 띄운다: 같은 출처의 Blob URL로 감싼다
+  const workerUrl = URL.createObjectURL(new Blob([`importScripts("${bundle.mainWorker}");`], {type: 'text/javascript'}));
+  const db = new duckdb.AsyncDuckDB(new duckdb.ConsoleLogger(duckdb.LogLevel.WARNING), new Worker(workerUrl));
+  await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
+  URL.revokeObjectURL(workerUrl);
+  await db.open({query: {castDecimalToDouble: true}});
+  S.conn = await db.connect();
+  S.engine = duckdb.PACKAGE_VERSION;
+  return S.conn;
+}
+async function ensureViews(status) {
+  const conn = await getConn(status);
+  if (S.viewsFor === S.version) return conn;
+  for (const d of S.catalog.datasets) {
+    const url = absUrl(fileOf(d, 'parquet').url).replaceAll("'", "''");
+    await conn.query(`CREATE OR REPLACE VIEW "${d.identifier}" AS SELECT * FROM read_parquet('${url}')`);
+  }
+  S.viewsFor = S.version;
+  return conn;
+}
+function cell(v, type) {
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'bigint') return Number(v);
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  if (typeof v === 'number' && type.startsWith('Date')) return new Date(v).toISOString().slice(0, 10);
+  if (typeof v === 'number' && type.startsWith('Timestamp')) return new Date(v).toISOString().replace('T', ' ').slice(0, 19);
+  if (typeof v === 'object') return JSON.stringify(v, (k, x) => typeof x === 'bigint' ? Number(x) : x);
+  return v;
+}
+function arrowToRows(table, limit) {
+  const fields = table.schema.fields.map((f) => ({name: f.name, type: String(f.type)}));
+  const n = Math.min(table.numRows, limit), rows = new Array(n);
+  const cols = fields.map((f, j) => table.getChildAt(j));
+  for (let i = 0; i < n; i++) rows[i] = cols.map((c, j) => cell(c.get(i), fields[j].type));
+  return {fields, rows, total: table.numRows};
+}
+function gridHtml(res, sortable) {
+  const isNum = res.fields.map((f) => /Int|Float|Decimal|Double/.test(f.type));
+  const head = res.fields.map((f, j) => {
+    const arrow = S.sort && sortable && S.sort.j === j ? (S.sort.dir > 0 ? ' ▲' : ' ▼') : '';
+    return `<th data-j="${j}" title="${esc(f.type)}">${esc(f.name)}<small>${esc(shortType(f.type))}</small>${arrow}</th>`;
+  }).join('');
+  const body = res.rows.slice(0, SHOW_ROWS).map((r) => '<tr>' + r.map((v, j) => v === null
+    ? '<td class="null">NULL</td>' : `<td class="${isNum[j] ? 'num' : ''}" title="${esc(v)}">${esc(isNum[j] && typeof v === 'number' ? fmtNum(v, 6) : v)}</td>`).join('') + '</tr>').join('');
+  return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+function shortType(t) { return t.replace(/<.*>/, '').replace('Float64', 'double').replace('Utf8', 'text').replace('Int64', 'bigint').replace('Int32', 'int').replace('DateDay', 'date').toLowerCase(); }
+function toCsv(table) {
+  const fields = table.schema.fields.map((f) => ({name: f.name, type: String(f.type)}));
+  const cols = fields.map((f, j) => table.getChildAt(j));
+  const q = (v) => v === null ? '' : /[",\n\r]/.test(String(v)) ? '"' + String(v).replaceAll('"', '""') + '"' : String(v);
+  const out = [fields.map((f) => q(f.name)).join(',')];
+  for (let i = 0; i < table.numRows; i++) out.push(cols.map((c, j) => q(cell(c.get(i), fields[j].type))).join(','));
+  return '﻿' + out.join('\r\n') + '\r\n';
+}
+function download(name, text, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], {type}));
+  a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// ---------- 사이드바 ----------
+function renderSide(active) {
+  const q = $('#q').value.trim().toLowerCase();
+  const html = [];
+  if (active === 'sql') {
+    html.push('<h4>표와 컬럼 (눌러서 넣기)</h4><div class="tree">');
+    for (const d of S.catalog.datasets) {
+      const cols = d.columns.filter((c) => !q || d.identifier.includes(q) || c.name.toLowerCase().includes(q) || (c.label + ' ' + c.help).toLowerCase().includes(q));
+      if (!cols.length && q) continue;
+      html.push(`<details ${q || d.identifier === 'dong_profile' ? 'open' : ''}><summary data-ins="${esc(d.identifier)}" title="두 번 누르면 SELECT 문을 넣습니다">${esc(d.identifier)} <span class="note">${esc(d.title)}</span></summary>`);
+      html.push(cols.map((c) => `<div class="col" data-ins="${esc(c.name)}" title="${esc(c.name + ' · ' + c.label + '\n' + c.help)}"><span>${esc(c.label)} <span class="eng">${esc(c.name)}</span></span><em>${esc(pgType(c.type))}</em></div>`).join(''));
+      html.push('</details>');
+    }
+    html.push('</div><h4>최근 질의</h4><div class="hist-list" id="hist"></div>');
+    $('#side').innerHTML = html.join('');
+    renderHistory();
+    return;
+  }
+  html.push('<h4>데이터 목록</h4>');
+  for (const d of S.catalog.datasets) {
+    const hits = q ? d.columns.filter((c) => c.name.toLowerCase().includes(q) || (c.label + ' ' + c.help).toLowerCase().includes(q)) : [];
+    const self = !q || d.identifier.includes(q) || d.title.toLowerCase().includes(q) || d.grain.toLowerCase().includes(q);
+    if (!self && !hits.length) continue;
+    const f = fileOf(d, 'parquet');
+    html.push(`<a class="dslink ${active === d.identifier ? 'on' : ''}" href="#/t/${d.identifier}"><div class="t">${esc(d.title)}</div><div class="s"><span class="mono">${esc(d.identifier)}</span> · ${f ? nf.format(f.rows) + '행' : '이 버전에 없음'} · 컬럼 ${d.columns.length}</div></a>`);
+    for (const c of hits.slice(0, 8)) html.push(`<a class="hit" href="#/t/${d.identifier}/schema?col=${encodeURIComponent(c.name)}" title="${esc(c.help)}">↳ ${esc(c.label)} <span class="eng">${esc(c.name)}</span></a>`);
+  }
+  if (html.length === 1) html.push('<p class="note">찾는 표나 컬럼이 없습니다.</p>');
+  html.push('<h4>바로 가기</h4><a class="dslink" href="#/help"><div class="t">처음 오셨나요</div><div class="s">쓰는 순서, 용어 풀이, 자주 묻는 질문</div></a><a class="dslink" href="#/sql"><div class="t">SQL 편집기</div><div class="s">브라우저에서 바로 질의</div></a><a class="dslink" href="catalog.json"><div class="t">catalog.json</div><div class="s">기계가 읽는 목록</div></a>');
+  $('#side').innerHTML = html.join('');
+}
+
+// ---------- 화면: 목록(홈) ----------
+async function viewHome() {
+  const m = await manifest();
+  const c = S.catalog;
+  const rows = c.datasets.reduce((a, d) => a + (fileOf(d, 'parquet')?.rows || 0), 0);
+  const cols = c.datasets.reduce((a, d) => a + d.columns.length, 0);
+  const bytes = c.datasets.reduce((a, d) => a + (fileOf(d, 'parquet')?.bytes || 0), 0);
+  const nsrc = Object.keys(m.licenses).length;
+  const html = [`<h1>${esc(c.title)}</h1><p class="sub">${esc(c.description)}</p>`,
+    `<div class="kpis"><div class="kpi"><b>${c.datasets.length}</b><span>표</span></div><div class="kpi"><b>${nf.format(rows)}</b><span>행 (이 버전 합계)</span></div><div class="kpi"><b>${cols}</b><span>공개 컬럼</span></div><div class="kpi"><b>${nsrc}</b><span>원천 기관 데이터</span></div><div class="kpi"><b>${fmtBytes(bytes)}</b><span>Parquet 합계</span></div><div class="kpi"><b class="mono" style="font-size:15px">${esc(S.version)}</b><span>버전 · 만든 시각 ${esc(m.created_at.slice(0, 16).replace('T', ' '))}</span></div></div>`,
+    `<div class="guide"><b>처음 오셨나요?</b> 서울 426개 행정동마다 전월세 시세, 출근 이동 시간, 가까운 역, 생활 편의 업소 수를 공공데이터로 계산해 둔 표입니다.<ol><li>아래에서 표를 고릅니다.</li><li>표의 <b>스키마</b> 탭에서 컬럼 뜻을 봅니다.</li><li><b>SQL 편집기</b>로 필요한 줄만 뽑거나, <b>가져가기</b> 탭에서 파일을 내려받습니다.</li></ol><div style="margin-top:6px"><a href="#/help">용어 풀이와 자주 묻는 질문 보기</a></div></div>`,
+    '<h2>표</h2><div class="cards">'];
+  for (const d of c.datasets) {
+    const f = fileOf(d, 'parquet');
+    const srcs = [...new Set(d.columns.flatMap((x) => x.sources))];
+    html.push(`<a class="card" href="#/t/${d.identifier}"><div class="t">${esc(d.title)}</div><div class="id">${esc(d.identifier)}</div><div class="g">${esc(grainText(d.grain))}</div><div class="row"><span class="badge">${f ? nf.format(f.rows) : 0}행</span><span class="badge gray">컬럼 ${d.columns.length}</span><span class="badge gray">${f ? fmtBytes(f.bytes) : ''}</span>${Object.keys(d.excluded_columns).length ? `<span class="badge warn">비공개 컬럼 ${Object.keys(d.excluded_columns).length}</span>` : ''}</div><div class="note" style="margin-top:6px">원천: ${esc(sourceNames(srcs).join(', '))}</div></a>`);
+  }
+  html.push('</div>');
+  html.push('<h2>신선도</h2><p class="note">값이 어느 시점의 원천에서 왔는지입니다. 버전 폴더의 파일은 한 번 올리면 바뀌지 않습니다.</p><table class="grid"><tr><th>항목</th><th>값</th></tr>');
+  for (const [k, v] of Object.entries(m.sources)) html.push(`<tr><td>${esc(LABELS.sources[k] || k)} <span class="note mono">${esc(k)}</span></td><td class="mono">${esc(String(v).replaceAll(',', ', '))}</td></tr>`);
+  html.push('</table>');
+  html.push('<h2>표끼리 잇기</h2><p class="note">모든 표는 통계청 행정동 코드 8자리(dong_id)로 dong_profile에 붙습니다. 동 이름은 서울 안에서도 겹치므로(예: 신사동이 강남구와 관악구에 있음) 이름으로 잇지 마세요.</p><div class="card"><div class="rel">');
+  for (const r of c.relations) html.push(`<span class="mono">${esc(r.from[0])}.${esc(r.from[1])}</span><span>→</span><span><span class="mono">${esc(r.to[0])}.${esc(r.to[1])}</span> <span class="note">(${esc(r.label)})</span></span>`);
+  html.push('</div></div>');
+  html.push('<h2>품질 지표</h2><table class="grid"><tr><th>지표</th><th class="num">값</th><th>이 숫자가 뜻하는 것</th></tr>');
+  for (const [k, v] of Object.entries(m.quality)) html.push(`<tr><td>${esc(LABELS.quality[k] || k)} <span class="note mono">${esc(k)}</span></td><td class="num">${fmtNum(Number(v))}</td><td>${esc(LABELS.qualityMeaning[k] ? LABELS.qualityMeaning[k](fmtNum(Number(v))) : '')}</td></tr>`);
+  html.push('</table><p class="note">"검사에서 걸러 따로 둔 행"(격리 행)은 검증 규칙을 어겨 따로 둔 원천 행입니다. 상품 파일에는 없습니다.</p>');
+  html.push(`<h2>바로 시작</h2><div class="row"><a class="btn" href="#/sql">SQL 편집기 열기</a><a class="btn" href="#/t/dong_profile/access">파일·코드로 가져가기</a><a class="btn" href="#/sources">출처·이용조건</a></div>`);
+  $('#main').innerHTML = html.join('');
+}
+
+// ---------- 화면: 표 ----------
+const TABS = [['overview', '개요'], ['schema', '스키마(컬럼 뜻)'], ['preview', '미리보기'], ['profile', '프로필(값 분포)'], ['access', '가져가기'], ['versions', '버전']];
+async function viewTable(name, tab, params) {
+  const d = ds(name);
+  if (!d) { $('#main').innerHTML = `<p class="err">표 ${esc(name)}이 없습니다.</p>`; return; }
+  tab = TABS.some(([k]) => k === tab) ? tab : 'overview';
+  const f = fileOf(d, 'parquet');
+  const head = `<p class="note"><a href="#/">데이터 목록</a> / ${esc(d.identifier)}</p><h1>${esc(d.title)} <span class="mono note" style="font-size:14px">${esc(d.identifier)}</span></h1><p class="sub">${esc(grainText(d.grain))}</p><div class="row"><span class="badge">${f ? nf.format(f.rows) : 0}행</span><span class="badge gray">컬럼 ${d.columns.length}</span><span class="badge gray">${esc(S.version)}</span><a class="btn" href="#/sql?q=${encodeURIComponent(`SELECT *\nFROM ${d.identifier}\nLIMIT 100;`)}">SQL로 열기</a></div><div class="tabs">${TABS.map(([k, l]) => `<a class="${k === tab ? 'on' : ''}" href="#/t/${name}/${k}">${l}</a>`).join('')}</div><div id="tab"><p class="loading">불러오는 중...</p></div>`;
+  $('#main').innerHTML = head;
+  const el = $('#tab');
+  try {
+    if (tab === 'overview') el.innerHTML = await tabOverview(d);
+    else if (tab === 'schema') { el.innerHTML = await tabSchema(d, params.get('col')); wireSchemaFilter(); }
+    else if (tab === 'preview') await tabPreview(d, el);
+    else if (tab === 'profile') el.innerHTML = await tabProfile(d);
+    else if (tab === 'access') el.innerHTML = tabAccess(d);
+    else if (tab === 'versions') el.innerHTML = await tabVersions(d);
+  } catch (e) { el.innerHTML = `<p class="err">${esc(e.message || e)}</p>`; console.error(e); }
+}
+async function tabOverview(d) {
+  const m = await manifest();
+  const p = (await profile())[d.identifier] || {};
+  const srcs = [...new Set(d.columns.flatMap((x) => x.sources))];
+  const rels = S.catalog.relations.filter((r) => r.from[0] === d.identifier || r.to[0] === d.identifier);
+  const keys = d.primary_key || [];
+  const h = [notesHtml(d), '<div class="cards">'];
+  h.push(`<div class="card"><div class="t">파일</div>${['parquet', 'csv'].map((fmt) => { const f = fileOf(d, fmt); return f ? `<div class="row" style="justify-content:space-between;margin-top:6px"><a href="${esc(f.url)}" download>${esc(d.identifier)}.${fmt}</a><span class="note">${fmtBytes(f.bytes)}</span></div>` : ''; }).join('')}<div class="note" style="margin-top:6px">Parquet: 분석 도구용(타입이 유지되고 작음). CSV: 엑셀용(UTF-8 BOM이라 한글이 깨지지 않음). 코드 컬럼은 글자로 불러오세요.</div></div>`);
+  h.push(`<div class="card"><div class="t">한 줄을 구분하는 값(키)</div><div style="margin-top:6px">${keys.length ? keys.map((k) => `<span class="badge" title="${esc(colOf(d.identifier, k)?.label || '')}">${esc(k)}</span>`).join(' + ') : '<span class="note">없음. 같은 값의 줄이 여럿일 수 있습니다(거래 고유 키가 없음: 동·호를 주지 않음).</span>'}</div><div class="note" style="margin-top:6px">${keys.length > 1 ? '이 컬럼들을 함께 보면 한 줄이 정해집니다. ' : ''}${keys.length ? '이 버전에서 비어 있지 않고 겹치지 않음을 만들 때 확인했습니다.' : ''}</div></div>`);
+  h.push(`<div class="card"><div class="t">원천</div>${srcs.map((s) => `<div style="margin-top:6px">${esc(S.catalog.licenses[s]?.name || s)}<div class="note">${esc(S.catalog.licenses[s]?.license || '')}</div></div>`).join('')}</div>`);
+  h.push('</div>');
+  if (rels.length) {
+    h.push('<h2>이어지는 표</h2><table class="grid"><tr><th>이 표 컬럼</th><th>잇는 곳</th><th>뜻</th><th></th></tr>');
+    for (const r of rels) {
+      const [mine, other] = r.from[0] === d.identifier ? [r.from, r.to] : [r.to, r.from];
+      const sql = `SELECT a.*, b.*\nFROM ${r.from[0]} a\nJOIN ${r.to[0]} b ON a.${r.from[1]} = b.${r.to[1]}\nLIMIT 100;`;
+      h.push(`<tr><td class="mono">${esc(mine[1])}</td><td class="mono"><a href="#/t/${other[0]}">${esc(other[0])}</a>.${esc(other[1])}</td><td>${esc(r.label)}</td><td><a href="#/sql?q=${encodeURIComponent(sql)}">조인 SQL</a></td></tr>`);
+    }
+    h.push('</table>');
+  }
+  const ex = Object.entries(d.excluded_columns);
+  if (ex.length) {
+    h.push('<h2>공개하지 않는 컬럼</h2><p class="note">원본 상품에는 있지만 이용조건 때문에 공개 파일에서 뺀 컬럼입니다. 값은 어디에도 없습니다. ${esc(EXCLUDED_TERMS)}.</p><table class="grid"><tr><th>컬럼</th><th>이유</th></tr>');
+    for (const [c, why] of ex) h.push(`<tr><td class="mono">${esc(c)}</td><td>${esc(why)}</td></tr>`);
+    h.push('</table>');
+  }
+  h.push('<h2>컬럼 한눈에</h2>' + await tabSchema(d, null, true));
+  return h.join('');
+}
+async function tabSchema(d, focus, compact) {
+  const p = (await profile())[d.identifier] || {};
+  const h = [compact ? '' : '<div class="row" style="margin-bottom:10px"><input id="colq" type="search" placeholder="컬럼 이름·뜻으로 거르기" style="padding:6px 9px;border:1px solid var(--line);border-radius:6px;min-width:260px"><span class="note">비어 있는 값(결측) 비율, 서로 다른 값 수, 범위는 이 버전 전체 줄로 계산한 정확한 값입니다. 맨 오른쪽 "근거"는 이 값을 만든 코드·문서 위치라 확인하고 싶을 때만 보면 됩니다.</span></div>',
+    '<table class="grid" id="schemaT"><tr><th>#</th><th>컬럼</th><th>단위</th><th>설명</th>' + (compact ? '' : '<th class="num">비어 있음</th><th class="num">서로 다른 값 수</th><th>범위·자주 나오는 값</th><th>타입</th><th>원천</th>') + '</tr>'];
+  d.columns.forEach((c, i) => {
+    const pr = p[c.name] || {};
+    const range = pr.kind === 'number' ? `${fmtNum(pr.min, 4)} ~ ${fmtNum(pr.max, 4)}` : pr.kind === 'date' ? `${esc(pr.min)} ~ ${esc(pr.max)}` : (pr.top || []).slice(0, 3).map(([v]) => `<span class="badge gray">${esc(v.length > 18 ? v.slice(0, 18) + '…' : v)}</span>`).join(' ');
+    const style = focus === c.name ? ' style="background:#fff8db"' : '';
+    h.push(`<tr id="col-${esc(c.name)}"${style} data-s="${esc((c.name + ' ' + c.label + ' ' + c.help).toLowerCase())}"><td class="num note">${i + 1}</td><td>${labelCell(c)}</td><td class="note">${esc(c.unit)}</td><td>${esc(c.help)}${valuesHtml(c)}<div class="note">예: <span class="mono">${esc(c.example)}</span></div></td>` + (compact ? '' :
+      `<td class="num">${pr.rows ? fmtNum(pct(pr.nulls, pr.rows), 1) + '%' : ''}</td><td class="num">${pr.distinct != null ? nf.format(pr.distinct) : ''}</td><td class="mono">${range}</td><td class="mono note">${esc(c.type)}</td><td class="note">${esc(sourceNames(c.sources).join(', '))}<div title="${esc(c.description)}">근거: ${refHtml(c.source_ref)}</div></td>`) + '</tr>');
+  });
+  h.push('</table>');
+  if (focus) setTimeout(() => document.getElementById('col-' + focus)?.scrollIntoView({block: 'center'}), 0);
+  return h.join('');
+}
+function wireSchemaFilter() {
+  const inp = $('#colq'); if (!inp) return;
+  inp.addEventListener('input', () => { const q = inp.value.trim().toLowerCase(); for (const tr of $('#schemaT').querySelectorAll('tr[data-s]')) tr.style.display = !q || tr.dataset.s.includes(q) ? '' : 'none'; });
+}
+async function tabPreview(d, el) {
+  const status = (m) => { el.innerHTML = `<p class="loading">${esc(m)}</p>`; };
+  status('미리보기를 준비하는 중...');
+  const conn = await ensureViews(status);
+  const t0 = performance.now();
+  const table = await conn.query(`SELECT * FROM "${d.identifier}" LIMIT 100`);
+  const res = arrowToRows(table, 100);
+  el.innerHTML = `<div class="row" style="margin-bottom:8px"><span class="status">앞 100행 · ${Math.round(performance.now() - t0)} ms · 브라우저 안 DuckDB-WASM ${esc(S.engine)}</span><a class="btn" href="#/sql?q=${encodeURIComponent(`SELECT *\nFROM ${d.identifier}\nLIMIT 100;`)}">SQL 편집기에서 열기</a></div><div class="result">${gridHtml(res, false)}</div>`;
+}
+async function tabProfile(d) {
+  const p = (await profile())[d.identifier] || {};
+  const h = ['<p class="note">이 버전 전체 줄로 미리 계산한 값입니다(근사 없음). 숫자 컬럼은 값 분포(히스토그램: 같은 너비 구간 12개에 몇 줄씩 있는지), 글자·날짜 컬럼은 자주 나오는 값 8개입니다.</p><div class="profile">'];
+  for (const c of d.columns) {
+    const pr = p[c.name]; if (!pr) continue;
+    const miss = pct(pr.nulls, pr.rows);
+    h.push(`<div class="pcard"><div class="row" style="justify-content:space-between"><span>${labelCell(c)}</span><span class="badge gray">${esc(c.type)}</span></div><div class="note">${esc(c.help)}</div>${valuesHtml(c)}<div class="miss" title="비어 있는 값 ${fmtNum(miss, 1)}%"><i style="width:${miss}%"></i></div><div class="stats"><span>줄 수</span><span>${nf.format(pr.rows)}</span><span>비어 있는 값</span><span>${nf.format(pr.nulls)} (${fmtNum(miss, 1)}%)</span><span>서로 다른 값 수</span><span>${nf.format(pr.distinct)}</span>`);
+    if (pr.kind === 'number') {
+      h.push(`<span>최소 · 최대</span><span>${fmtNum(pr.min, 4)} · ${fmtNum(pr.max, 4)}</span><span>평균</span><span>${fmtNum(pr.mean, 4)}</span><span>하위 25% · 가운데 · 상위 25% 값</span><span>${fmtNum(pr.q25, 4)} · ${fmtNum(pr.median, 4)} · ${fmtNum(pr.q75, 4)}</span></div>`);
+      const hs = pr.histogram, mx = Math.max(...hs.counts, 1);
+      h.push('<div class="hist">' + hs.counts.map((n, i) => { const lo = hs.min + i * hs.width; return `<div style="height:${Math.max(1, 100 * n / mx)}%" title="${fmtNum(lo, 3)} ~ ${fmtNum(lo + hs.width, 3)}${c.unit ? ' ' + c.unit : ''}: ${nf.format(n)}줄"></div>`; }).join('') + `</div><div class="hl"><span>${fmtNum(hs.min, 3)}</span><span>${fmtNum(hs.min + hs.width * hs.counts.length, 3)}</span></div>`);
+    } else {
+      if (pr.kind === 'date') h.push(`<span>처음 · 마지막</span><span>${esc(pr.min)} · ${esc(pr.max)}</span>`);
+      h.push('</div><div style="margin-top:8px">');
+      const nn = pr.rows - pr.nulls || 1;
+      for (const [v, n] of pr.top || []) h.push(`<div class="bar"><div class="b" title="${esc(v)}"><i style="width:${100 * n / nn}%"></i><span>${esc(v)}</span></div><div class="c">${fmtNum(100 * n / nn, 1)}%</div></div>`);
+      if (pr.distinct > (pr.top || []).length) h.push(`<div class="note">그 밖 ${nf.format(pr.distinct - pr.top.length)}개 값</div>`);
+      h.push('</div>');
+    }
+    h.push('</div>');
+  }
+  h.push('</div>');
+  return h.join('');
+}
+function snippet(title, code) { return `<h3>${esc(title)} <button class="copy" data-copy="${esc(code)}">복사</button></h3><pre class="code">${esc(code)}</pre>`; }
+function tabAccess(d) {
+  const pq = absUrl(fileOf(d, 'parquet').url), csv = absUrl(fileOf(d, 'csv').url), base = absUrl('.');
+  const strCols = d.columns.filter((c) => /character|text/.test(c.type) && /(_id|_cd)$/.test(c.name)).map((c) => `"${c.name}": str`).join(', ');
+  const fp = fileOf(d, 'parquet'), fc = fileOf(d, 'csv');
+  return [
+    `<p class="note">Parquet: 분석 도구용(타입이 유지되고 작음). CSV: 엑셀용. 파일 지문(sha256)은 내려받은 파일이 원본과 같은지 확인하는 값입니다.</p><table class="grid"><tr><th>파일</th><th class="num">크기</th><th class="num">줄 수</th><th>파일 지문(sha256)</th><th></th></tr>`,
+    ...[fp, fc].map((f) => `<tr><td><a href="${esc(f.url)}" download class="mono">${esc(f.url)}</a></td><td class="num">${fmtBytes(f.bytes)}</td><td class="num">${nf.format(f.rows)}</td><td class="mono note" title="${esc(f.sha256)}">${esc(f.sha256.slice(0, 16))}…</td><td><button class="copy" data-copy="${esc(absUrl(f.url))}">URL 복사</button></td></tr>`),
+    '</table><p class="note">버전 폴더의 파일은 바뀌지 않습니다. 늘 최신을 쓰려면 latest.json에서 버전을 읽으세요. 엑셀에서 CSV를 열 때는 코드 컬럼(dong_id 등)을 글자로 불러와야 다른 표의 코드와 맞습니다.</p>',
+    snippet('Python (pandas)', `import pandas as pd\n\n# Parquet: 타입이 그대로 온다 (pyarrow 필요)\ndf = pd.read_parquet("${pq}")\n\n# CSV: 코드 컬럼은 앞자리 0이 빠지지 않게 글자로 읽는다\ndf = pd.read_csv("${csv}"${strCols ? `, dtype={${strCols}}` : ''})`),
+    snippet('Python (DuckDB)', `import duckdb\n\ncon = duckdb.connect()\ncon.sql("INSTALL httpfs; LOAD httpfs;")\ndf = con.sql("""\n    SELECT *\n    FROM '${pq}'\n    LIMIT 100\n""").df()`),
+    snippet('DuckDB CLI', `INSTALL httpfs; LOAD httpfs;\nCREATE VIEW ${d.identifier} AS SELECT * FROM '${pq}';\nDESCRIBE ${d.identifier};\nSELECT count(*) FROM ${d.identifier};`),
+    snippet('R (arrow)', `library(arrow)\ndf <- read_parquet("${pq}")`),
+    snippet('늘 최신 버전 쓰기 (Python)', `import json, urllib.request\n\nBASE = "${base}"\nlatest = json.load(urllib.request.urlopen(BASE + "latest.json"))["version"]\nurl = f"{BASE}{latest}/${d.identifier}.parquet"`),
+    snippet('내려받고 검증하기 (셸)', `curl -O ${pq}\nsha256sum ${d.identifier}.parquet\n# 기대값: ${fp.sha256}`),
+  ].join('');
+}
+async function tabVersions(d) {
+  const h = ['<table class="grid"><tr><th>버전</th><th>만든 시각</th><th class="num">행</th><th class="num">Parquet</th><th>파일 지문(sha256, Parquet)</th><th>버전 설명서(manifest.json)</th></tr>'];
+  for (const v of S.catalog.versions) {
+    const f = fileOf(d, 'parquet', v.version);
+    h.push(`<tr><td class="mono">${esc(v.version)}${v.version === S.catalog.latest ? ' <span class="badge ok">최신</span>' : ''}</td><td>${esc(v.created_at.replace('T', ' ').slice(0, 19))}</td><td class="num">${f ? nf.format(f.rows) : '-'}</td><td class="num">${f ? fmtBytes(f.bytes) : '-'}</td><td class="mono note">${f ? esc(f.sha256.slice(0, 16)) + '…' : '-'}</td><td><a href="${esc(v.manifest)}">manifest.json</a></td></tr>`);
+  }
+  h.push('</table><p class="note">공개 버전 폴더는 한 번 올리면 바뀌지 않습니다. 같은 버전 이름으로 다른 내용을 올리려 하면 만드는 단계에서 실패합니다.</p>');
+  return h.join('');
+}
+
+// ---------- 화면: SQL 편집기 ----------
+function renderHistory() {
+  const el = $('#hist'); if (!el) return;
+  const hs = store.get('hs_sql_history', []);
+  el.innerHTML = hs.length ? hs.map((q, i) => `<a href="#" data-h="${i}" title="${esc(q)}">${esc(q.replace(/\s+/g, ' ').slice(0, 60))}</a>`).join('') : '<span class="note">아직 없습니다. 이 브라우저에만 저장됩니다.</span>';
+}
+function pushHistory(q) { const hs = store.get('hs_sql_history', []).filter((x) => x !== q); hs.unshift(q); store.set('hs_sql_history', hs.slice(0, 25)); renderHistory(); }
+function viewSql(params) {
+  const initial = params.get('q') || store.get('hs_sql_draft', null) || EXAMPLES[2][2];
+  $('#main').innerHTML = `<div class="sqlwrap">
+  <div><h1>SQL 편집기</h1><p class="sub">표 이름(dong_profile, commute_od, rent_listing, dong_mois_map)으로 바로 질의합니다. DuckDB SQL 문법이고, 이 브라우저가 공개 Parquet를 직접 읽습니다. 질의와 결과는 서버로 보내지 않습니다. 왼쪽 목록에서 컬럼을 누르면 영문 이름이 들어가고, 마우스를 올리면 뜻이 보입니다.</p></div>
+  <div class="row"><button class="primary" id="run">실행 <span class="note" style="color:#dfe7fb">Ctrl+Enter</span></button>
+    <select id="ex" aria-label="예시 질의"><option value="">예시 질의 고르기</option>${EXAMPLES.map(([l, qn], i) => `<option value="${i}">${esc(qn)} (${esc(l)})</option>`).join('')}</select>
+    <button id="explain" title="EXPLAIN ANALYZE: 질의를 실제로 돌리고 단계마다 걸린 시간을 보여 줍니다">실행 계획(어디서 시간이 걸렸는지)</button>
+    <button id="chart" disabled title="결과의 첫 글자 컬럼을 이름, 첫 숫자 컬럼을 값으로 막대 그래프">차트로 보기</button><button id="share">링크 복사</button><button id="csv" disabled>결과 CSV 내려받기</button></div>
+  <textarea id="sql" spellcheck="false" aria-label="SQL">${esc(initial)}</textarea>
+  <div><div class="status" id="st">선택한 부분만 실행하려면 그 부분을 고른 뒤 Ctrl+Enter. 결과 머리글을 누르면 정렬됩니다.</div><div id="err"></div><div class="result" id="res" style="margin-top:8px"><p class="note" style="padding:10px">결과가 여기에 나옵니다.</p></div></div>
+</div>`;
+  const ta = $('#sql');
+  ta.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runSql(); }
+    else if (e.key === 'Tab' && !e.shiftKey) { e.preventDefault(); ta.setRangeText('  ', ta.selectionStart, ta.selectionEnd, 'end'); }
+  });
+  ta.addEventListener('input', () => store.set('hs_sql_draft', ta.value));
+  $('#run').onclick = () => runSql();
+  $('#explain').onclick = () => runSql('EXPLAIN ANALYZE ');
+  $('#ex').onchange = (e) => { if (e.target.value !== '') { ta.value = EXAMPLES[+e.target.value][2]; store.set('hs_sql_draft', ta.value); runSql(); e.target.value = ''; } };
+  $('#share').onclick = () => copy(location.href.split('#')[0] + '#/sql?q=' + encodeURIComponent(ta.value));
+  $('#chart').onclick = () => { if (!S.last) return; S.chart = !S.chart; $('#chart').textContent = S.chart ? '표로 보기' : '차트로 보기'; drawResult(); };
+  $('#csv').onclick = () => S.last && download(`query_${S.version}.csv`, toCsv(S.last.table), 'text/csv;charset=utf-8');
+  $('#res').addEventListener('click', (e) => {
+    const th = e.target.closest('th[data-j]'); if (!th || !S.last) return;
+    const j = +th.dataset.j; S.sort = {j, dir: S.sort && S.sort.j === j ? -S.sort.dir : 1};
+    const cmp = (a, b) => (a[j] === null) - (b[j] === null) || (a[j] < b[j] ? -1 : a[j] > b[j] ? 1 : 0);
+    S.last.res.rows.sort((a, b) => S.sort.dir * cmp(a, b));
+    drawResult();
+  });
+  if (params.get('q')) runSql();
+}
+async function runSql(prefix = '') {
+  const ta = $('#sql');
+  const sel = ta.value.slice(ta.selectionStart, ta.selectionEnd).trim();
+  const q = (sel || ta.value).trim().replace(/;\s*$/, '');
+  if (!q) return;
+  const st = $('#st'), err = $('#err'), res = $('#res');
+  err.innerHTML = ''; $('#run').disabled = true;
+  try {
+    const conn = await ensureViews((m) => { st.textContent = m; });
+    st.textContent = '실행 중...';
+    const t0 = performance.now();
+    const table = await conn.query(prefix + q);
+    const ms = Math.round(performance.now() - t0);
+    S.sort = null; S.chart = false; $('#chart').textContent = '차트로 보기';
+    if (prefix) {
+      const r = arrowToRows(table, 1000);
+      res.innerHTML = `<pre class="code" style="margin:0;border-radius:0">${esc(r.rows.map((x) => x.filter((v) => v !== null).slice(-1)[0]).join('\n'))}</pre>`;
+      st.textContent = `실행 계획 · ${ms} ms`; return;
+    }
+    const r = arrowToRows(table, KEEP_ROWS);
+    S.last = {table, res: r};
+    drawResult();
+    const more = r.total > SHOW_ROWS ? ` · 앞 ${nf.format(SHOW_ROWS)}행만 표시(정렬은 앞 ${nf.format(Math.min(r.total, KEEP_ROWS))}행 안에서, CSV는 전체)` : '';
+    st.textContent = `${nf.format(r.total)}행 · 컬럼 ${r.fields.length} · ${ms} ms · 버전 ${S.version} · DuckDB-WASM ${S.engine}${more}`;
+    $('#csv').disabled = !r.total;
+    $('#chart').disabled = !r.total || !r.fields.some(isNumField);
+    pushHistory(q + ';');
+  } catch (e) {
+    st.textContent = '';
+    err.innerHTML = `<div class="err">${esc(e.message || e)}</div>${sqlHint(e.message || String(e))}`;
+  } finally { $('#run').disabled = false; }
+}
+
+const isNumField = (f) => /Int|Float|Decimal|Double/.test(f.type);
+// SQL 오류 아래에 붙이는 흔한 원인 안내. 오류 글에 맞는 줄을 먼저 보여 준다
+function sqlHint(msg) {
+  const tips = [
+    // 따옴표 없이 쓴 한글 값(= 역삼1동)은 DuckDB가 "Referenced column ... not found"로 알린다: 따옴표 안내를 먼저
+    [/Parser Error|syntax error|column "[^"]*[가-힣][^"]*" not found/i, "글자 값은 작은따옴표로 감쌉니다. 예: dong_nm = '역삼1동', lease_type = '월세'"],
+    [/does not exist|not found|Referenced column|Catalog Error|Binder Error/i, '표·컬럼 이름 오타일 수 있습니다. 왼쪽 목록에서 컬럼을 누르면 정확한 이름이 들어갑니다.'],
+    [/Conversion Error|Could not convert|No function matches|Cannot compare/i, "코드 컬럼(dong_id, sgg_cd 등)은 글자 타입입니다. '11230'처럼 작은따옴표로 씁니다."],
+  ];
+  const hit = tips.filter(([re]) => re.test(msg)), rest = tips.filter((t) => !hit.includes(t));
+  return `<div class="hint"><b>흔한 원인</b><ul>${[...hit, ...rest].map(([, t]) => `<li>${esc(t)}</li>`).join('')}</ul></div>`;
+}
+function drawResult() {
+  const r = S.last?.res, el = $('#res'); if (!r) return;
+  if (!r.fields.length) { el.innerHTML = '<p class="note" style="padding:10px">결과 컬럼이 없습니다.</p>'; return; }
+  if (!S.chart || !r.fields.some(isNumField)) { el.innerHTML = gridHtml(r, true); return; }
+  const vj = r.fields.findIndex(isNumField), lj = r.fields.findIndex((f) => !isNumField(f));
+  const rows = r.rows.slice(0, 60), vals = rows.map((x) => x[vj] ?? 0), mx = Math.max(...vals.map(Math.abs), 1e-12);
+  el.innerHTML = `<div class="chart"><p class="note">값: <b class="mono">${esc(r.fields[vj].name)}</b> · 이름: <b class="mono">${lj >= 0 ? esc(r.fields[lj].name) : '행 번호'}</b> · 앞 ${rows.length}행 (머리글 정렬 순서대로)</p>` +
+    rows.map((x, i) => `<div class="bar"><div class="lab" title="${esc(lj >= 0 ? x[lj] : i + 1)}">${esc(lj >= 0 ? (x[lj] ?? 'NULL') : i + 1)}</div><div class="b"><i style="width:${100 * Math.abs(vals[i]) / mx}%"></i><span>&nbsp;</span></div><div class="c">${x[vj] === null ? 'NULL' : fmtNum(x[vj], 3)}</div></div>`).join('') + '</div>';
+}
+
+// ---------- 화면: 출처·이용조건 ----------
+async function viewSources() {
+  const m = await manifest();
+  const h = [`<h1>출처·이용조건</h1><p class="sub">이용조건 확인 날짜 ${esc(m.terms_checked_date)}. ${esc(S.catalog.legal_note)}. 공공기관이 이 데이터를 후원하거나 보증하지 않습니다.</p>`,
+    '<p>이 데이터를 쓰거나 다시 배포할 때는 아래 출처 문구를 함께 표시해 주세요. 원문은 <a href="NOTICE.md">NOTICE.md</a>에도 있습니다.</p><div class="cards">'];
+  for (const [k, s] of Object.entries(m.licenses)) {
+    const used = S.catalog.datasets.flatMap((d) => d.columns.filter((c) => c.sources.includes(k)).map((c) => `${d.identifier}.${c.name}`));
+    h.push(`<div class="card"><div class="t">${esc(s.name)}</div><div class="note" style="margin:4px 0">${esc(s.license)}</div>${s.attribution ? `<div style="margin:6px 0">출처 문구: ${esc(s.attribution)} <button class="copy" data-copy="${esc(s.attribution)}">복사</button></div>` : ''}<div>${s.urls.map((u) => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(new URL(u).hostname)}</a>`).join(' · ')}</div><details style="margin-top:6px"><summary class="note">이 원천을 쓰는 컬럼 ${used.length}개</summary><div class="mono note">${esc(used.join(', '))}</div></details></div>`);
+  }
+  h.push(`</div><h2>공개하지 않는 컬럼</h2><p class="note">${esc(EXCLUDED_TERMS)}.</p><table class="grid">` + '<tr><th>표.컬럼</th><th>이유</th></tr>');
+  for (const d of S.catalog.datasets) for (const [c, why] of Object.entries(d.excluded_columns)) h.push(`<tr><td class="mono">${esc(d.identifier)}.${esc(c)}</td><td>${esc(why)}</td></tr>`);
+  h.push('</table>');
+  $('#main').innerHTML = h.join('');
+}
+
+// ---------- 화면: 처음 오셨나요 ----------
+// 답은 data_contract.md, decisions.md, public_columns.json에 있는 내용만 쓴다. 근거는 각 답 끝에 적는다.
+const GLOSSARY = [
+  ['dong_id', '통계청 행정동 코드 8자리. 모든 표를 잇는 키입니다. 행정안전부 코드(mois_dong_cd), 구 코드(sgg_cd)와 다릅니다.'],
+  ['한 줄을 구분하는 값(키)', '표에서 한 줄을 하나로 정하는 컬럼. 예: dong_profile의 dong_id.'],
+  ['중앙값(가운데 값)', '값을 크기순으로 세웠을 때 가운데 값. 몇몇 큰 값에 평균보다 덜 흔들립니다.'],
+  ['비어 있는 값(결측)', '값이 없는 칸. SQL에서는 NULL, CSV에서는 빈 칸입니다. 0과 다릅니다.'],
+  ['서로 다른 값 수(고유값)', '컬럼에 나오는 값이 몇 가지인지.'],
+  ['하위 25% · 가운데 · 상위 25% 값(사분위)', '값을 크기순으로 세워 4등분하는 경계 값.'],
+  ['값 분포(히스토그램)', '값 범위를 같은 너비로 나눠 구간마다 몇 줄이 있는지 그린 막대.'],
+  ['버전', '데이터를 내보낸 날짜(vYYYY.MM.DD). 한 번 올린 버전의 파일은 바뀌지 않습니다.'],
+  ['버전 설명서(manifest.json)', '버전마다 파일 목록, 줄 수, 파일 지문, 원천 기준일, 품질 지표를 적은 파일.'],
+  ['파일 지문(sha256)', '내려받은 파일이 원본과 같은지 확인하는 값. 한 글자만 달라도 바뀝니다.'],
+  ['검사에서 걸러 따로 둔 행(격리 행)', '검증 규칙을 어겨 따로 둔 원천 행. 상품 파일에는 없습니다.'],
+  ['Parquet / CSV', 'Parquet는 분석 도구용(타입이 유지되고 작음), CSV는 엑셀용입니다.'],
+  ['신규 계약', '새로 맺은 전월세 계약. 기존 계약을 이어 가는 갱신 계약은 뺐습니다. 지금 집을 구하는 사람이 받을 수 있는 가격에 가깝게 하려는 것입니다.'],
+  ['필지', '지번 하나로 나뉜 땅 한 덩어리. 전월세 계약은 지번으로 필지를 찾아 행정동을 정했습니다.'],
+  ['동 안쪽 대표점', '동 도형 안에 반드시 들어가는 점(PostGIS ST_PointOnSurface). 무게중심은 모양에 따라 동 밖에 떨어질 수 있어 쓰지 않았습니다. 가장 가까운 역과 두 동 사이 직선거리를 이 점에서 잽니다.'],
+  ['이동인구(보정한 추정치), 보정계수', '이동인구 값은 사람 수가 아니라 이동 횟수를 더한 값이다. 원천이 한 달의 같은 요일(예: 그달 모든 월요일)을 더해 주고, 이 표는 그것을 최근 6개 대상월의 평일(월~금), 도착 7·8·9시, 성별을 모두 더했다. 그래서 30이나 10은 약 6개월 동안 더한 이동 횟수다. 값은 KT 휴대폰 신호로 잡은 이동을 KT 시장점유율 등으로 나눠 전체 인구로 키운 값. 그래서 소수점이 있고, 3명 이하는 원천에서 가려져 있습니다.'],
+  ['업종 코드(G20405 등)', '소상공인시장진흥공단 상가(상권)정보의 업종 소분류 코드. G20405 편의점, G20404 슈퍼마켓, G21501 약국, Q10201 내과·소아과 의원, S20901 세탁소, S20902 셀프 빨래방.'],
+  ['공공누리 제1유형', '출처를 표시하면 공공저작물을 쓸 수 있다는 표시. 제3유형은 출처 표시에 더해 변경을 금지합니다.'],
+  ['근거, 결정 번호', '설명 끝의 "근거"는 이 데이터를 만든 코드 레포의 문서와 코드 위치입니다(누르면 열림). "결정 23"처럼 적힌 번호는 그 레포 docs/decisions.md의 설계 결정 번호입니다.'],
+  ['DuckDB-WASM', '브라우저 안에서 도는 DuckDB(SQL 엔진). 처음 한 번 엔진 파일을 내려받고, 그 뒤 질의는 이 컴퓨터 안에서 돕니다.'],
+  ['SUMMARIZE, DESCRIBE', 'DuckDB 명령. SUMMARIZE 표이름은 컬럼마다 최솟값·최댓값·비어 있는 비율을, DESCRIBE 표이름은 컬럼 이름과 타입을 보여 줍니다.'],
+  ['실행 계획(EXPLAIN ANALYZE)', '질의를 실제로 돌리고 단계마다 걸린 시간과 줄 수를 보여 줍니다. 느린 질의를 고칠 때 봅니다.'],
+];
+const FAQ = [
+  ['왜 동 이름으로 표를 이으면 안 되나요?', '서울 안에도 같은 이름의 동이 있습니다. 신사동이 강남구(11230510)와 관악구(11210680)에 하나씩 있어, 이름으로 이으면 두 동의 값이 섞입니다. 표끼리는 dong_id로 잇습니다.', 'dong_profile에서 dong_nm = \'신사동\' 2줄; catalog.json relations'],
+  ['강남구 동만 뽑으려면 어떻게 하나요?', '구 이름 컬럼은 없고 통계청 구 코드(sgg_cd)가 있습니다. 강남구는 \'11230\'입니다: WHERE sgg_cd = \'11230\'. 25개 구의 코드는 dong_profile 스키마의 sgg_cd 코드 값 풀이에 있습니다. 행정안전부 코드(mois_dong_cd)에서는 11230이 동대문구라서, 두 코드를 섞으면 다른 구가 나옵니다.', 'data_contract.md 2절; docs/public_columns.json sgg_cd 근거'],
+  ['출근 시간이 왜 이렇게 길게 나오나요?', '생활이동의 이동 시간은 휴대폰 신호로 본 "머문 곳과 머문 곳 사이" 시간입니다. 아주 가까운 이동은 빠지고 짧게 들른 곳은 이동에 포함돼, 가까운 동일수록 실제보다 길게 나옵니다. 대중교통 길찾기 시간이 아닙니다. 그래서 시간 한도 이하 또는 직선거리(distance_km) 3km 이내를 함께 쓰기를 권합니다. 이동인구가 아주 적은 쌍은 평균이 크게 흔들리니 population_* 컬럼도 함께 보세요. 평일 아침 출근 방향만 있고 퇴근 방향은 없습니다.', 'data_contract.md 6절 1; decisions.md 결정 23; question.md 3절'],
+  ['일부 컬럼(면적, 혼잡도)은 왜 없나요?', '원천의 이용조건 때문에 공개 파일에서 뺐습니다. 행정동 면적과 면적당 업소 수는 SGIS 경계 도형을 직접 잰 값이라, 혼잡도는 판정 당시 변경 금지 표시가 있어 1차 공개에서 뺐습니다. 이름과 이유는 출처·이용조건 화면에 있습니다.', 'data_contract.md 5절; NOTICE.md'],
+  ['데이터는 언제 바뀌나요?', '원천마다 주기가 다릅니다. 전월세는 주 1회 수집, 출퇴근(생활이동)은 월 1회, 편의 업소는 분기, 경계는 연 1회입니다. 새로 내보내면 새 버전 폴더가 생기고 latest.json이 그 버전을 가리킵니다. 이미 올린 버전의 파일은 바뀌지 않습니다.', 'data_contract.md 1절 갱신 주기; README 5절 공개 사이트'],
+  ['엑셀에서 코드가 숫자로 바뀌어요.', '엑셀은 dong_id 같은 코드를 숫자로 바꿔 읽습니다. 이 데이터의 코드는 모두 11로 시작해 앞자리 0이 사라지지는 않지만, 숫자가 된 코드는 다른 표의 글자 코드와 이을 때 맞지 않을 수 있습니다. 엑셀의 데이터 가져오기에서 코드 컬럼을 텍스트로 지정하거나, pandas에서는 dtype={"dong_id": str}처럼 글자로 읽습니다.', '공개 파일의 dong_id, sgg_cd, mois_dong_cd 최솟값이 11로 시작(2026-11-22 질의); 가져가기 탭 pandas 예시'],
+];
+async function viewHelp() {
+  const h = [`<h1>처음 오셨나요</h1><p class="sub">이 사이트가 무엇이고 어떻게 쓰는지 한 쪽에 모았습니다.</p>`,
+    `<h2>이 데이터는</h2><p>${esc(S.catalog.description)}. 서울에서 일하게 된 사회초년생이 살 동네를 고를 때 보는 값(월세·전세 시세, 직장까지 이동 시간, 가까운 역, 편의점·약국 같은 업소 수)을 행정동 426곳마다 미리 계산해 둔 것입니다. 서버 없이 파일로만 공개하고, SQL은 여러분의 브라우저 안에서 돕니다.</p>`,
+    `<h2>쓰는 순서</h2><ol><li><b>표 고르기</b>: <a href="#/">데이터 목록</a>에서 표를 고릅니다. 동마다 한 줄인 표는 dong_profile입니다.</li><li><b>컬럼 뜻 보기</b>: 표의 <b>스키마</b> 탭에서 한글 이름, 단위, 설명을 봅니다. 맨 위 "쓰기 전에 알아 둘 것"을 먼저 읽습니다.</li><li><b>뽑거나 내려받기</b>: <a href="#/sql">SQL 편집기</a>에서 필요한 줄만 뽑아 CSV로 받거나, 표의 <b>가져가기</b> 탭에서 파일과 코드 예시를 씁니다.</li></ol>`,
+    '<h2>용어 풀이</h2><table class="grid"><tr><th>말</th><th>뜻</th></tr>' + GLOSSARY.map(([k, v]) => `<tr><td><b>${esc(k)}</b></td><td>${esc(v)}</td></tr>`).join('') + '</table>',
+    '<h2>자주 묻는 질문</h2><dl class="faq">' + FAQ.map(([q, a, r]) => `<dt>${esc(q)}</dt><dd>${esc(a)} <span class="ref">(근거: ${refHtml(r)})</span></dd>`).join('') + '</dl>'];
+  $('#main').innerHTML = h.join('');
+}
+
+// ---------- 라우팅 ----------
+async function route() {
+  const [path, qs] = (location.hash.slice(1) || '/').split('?');
+  const params = new URLSearchParams(qs || '');
+  const parts = path.split('/').filter(Boolean);
+  const page = parts[0] === 't' ? 'table' : parts[0] || 'home';
+  for (const a of document.querySelectorAll('header nav a')) a.classList.toggle('on', a.dataset.nav === (page === 'table' ? 'home' : page));
+  renderSide(page === 'table' ? parts[1] : page);
+  window.scrollTo(0, 0);
+  try {
+    if (page === 'table') await viewTable(parts[1], parts[2], params);
+    else if (page === 'sql') viewSql(params);
+    else if (page === 'sources') await viewSources();
+    else if (page === 'help') await viewHelp();
+    else await viewHome();
+  } catch (e) { $('#main').innerHTML = `<p class="err">${esc(e.message || e)}</p>`; console.error(e); }
+}
+
+document.addEventListener('click', (e) => {
+  const c = e.target.closest('[data-copy]'); if (c) { e.preventDefault(); copy(c.dataset.copy); return; }
+  const h = e.target.closest('[data-h]'); if (h) { e.preventDefault(); const ta = $('#sql'); if (ta) { ta.value = store.get('hs_sql_history', [])[+h.dataset.h]; ta.focus(); } return; }
+  const ins = e.target.closest('[data-ins]');
+  if (ins && $('#sql')) {
+    const ta = $('#sql'), text = e.detail === 2 && ins.tagName === 'SUMMARY' ? `SELECT *\nFROM ${ins.dataset.ins}\nLIMIT 100;` : ins.dataset.ins;
+    if (e.detail === 2 && ins.tagName === 'SUMMARY') { e.preventDefault(); ta.value = text; } else if (ins.tagName !== 'SUMMARY') ta.setRangeText(text, ta.selectionStart, ta.selectionEnd, 'end');
+    ta.focus();
+  }
+});
+$('#q').addEventListener('input', () => { const p = location.hash.startsWith('#/sql') ? 'sql' : (location.hash.match(/^#\/t\/([^/?]+)/) || [])[1]; renderSide(p); });
+window.addEventListener('hashchange', route);
+
+(async () => {
+  try {
+    S.catalog = await getJson('catalog.json');
+    const want = new URLSearchParams(location.search).get('v');
+    S.version = S.catalog.versions.some((v) => v.version === want) ? want : S.catalog.latest;
+    $('#ver').innerHTML = S.catalog.versions.map((v) => `<option value="${esc(v.version)}" ${v.version === S.version ? 'selected' : ''}>${esc(v.version)}${v.version === S.catalog.latest ? ' (최신)' : ''}</option>`).join('');
+    $('#ver').onchange = (e) => { S.version = e.target.value; route(); };
+    await route();
+  } catch (e) { $('#main').innerHTML = `<p class="err">목록(catalog.json)을 읽지 못했습니다: ${esc(e.message || e)}</p>`; }
+})();
+</script>
+</body>
+</html>
