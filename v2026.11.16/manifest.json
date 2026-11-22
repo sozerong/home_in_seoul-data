@@ -1,0 +1,519 @@
+{
+  "column_sources": {
+    "commute_od": {
+      "avg_minutes": [
+        "seoul_living"
+      ],
+      "avg_minutes_age20_34": [
+        "seoul_living"
+      ],
+      "avg_minutes_all_ages": [
+        "seoul_living"
+      ],
+      "basis": [
+        "seoul_living"
+      ],
+      "copied_from_2021_split_dong": [
+        "seoul_living"
+      ],
+      "dest_dong_id": [
+        "kostat_admin_code",
+        "seoul_living"
+      ],
+      "distance_km": [
+        "derived_location"
+      ],
+      "origin_dong_id": [
+        "kostat_admin_code",
+        "seoul_living"
+      ],
+      "population_age20_34": [
+        "seoul_living"
+      ],
+      "population_all_ages": [
+        "seoul_living"
+      ],
+      "target_months": [
+        "seoul_living"
+      ]
+    },
+    "dong_mois_map": {
+      "dong_id": [
+        "kostat_admin_code",
+        "derived_location"
+      ],
+      "dong_nm": [
+        "kostat_admin_code"
+      ],
+      "is_primary": [
+        "sbiz_store",
+        "derived_location"
+      ],
+      "mois_dong_cd": [
+        "sbiz_store",
+        "derived_location"
+      ],
+      "share": [
+        "sbiz_store",
+        "derived_location"
+      ],
+      "stores": [
+        "sbiz_store",
+        "derived_location"
+      ]
+    },
+    "dong_profile": {
+      "boundary_base_date": [
+        "sgis_boundary"
+      ],
+      "convenience_store": [
+        "sbiz_store",
+        "derived_location"
+      ],
+      "dong_id": [
+        "kostat_admin_code"
+      ],
+      "dong_nm": [
+        "kostat_admin_code"
+      ],
+      "internal_pediatric_clinic": [
+        "sbiz_store",
+        "derived_location"
+      ],
+      "jeonse_deals": [
+        "molit_rent",
+        "derived_location"
+      ],
+      "jeonse_median_deposit_10k_won": [
+        "molit_rent",
+        "derived_location"
+      ],
+      "laundry": [
+        "sbiz_store",
+        "derived_location"
+      ],
+      "mois_dong_cd": [
+        "sbiz_store",
+        "derived_location"
+      ],
+      "monthly_deals": [
+        "molit_rent",
+        "derived_location"
+      ],
+      "monthly_median_deposit_10k_won": [
+        "molit_rent",
+        "derived_location"
+      ],
+      "monthly_median_rent_10k_won": [
+        "molit_rent",
+        "derived_location"
+      ],
+      "nearest_station_distance_m": [
+        "seoul_station_master",
+        "derived_location"
+      ],
+      "nearest_station_nm": [
+        "seoul_station_master",
+        "derived_location"
+      ],
+      "nearest_station_route": [
+        "seoul_station_master",
+        "derived_location"
+      ],
+      "pharmacy": [
+        "sbiz_store",
+        "derived_location"
+      ],
+      "sgg_cd": [
+        "kostat_admin_code"
+      ],
+      "supermarket": [
+        "sbiz_store",
+        "derived_location"
+      ]
+    },
+    "rent_listing": {
+      "build_year": [
+        "molit_rent"
+      ],
+      "deal_date": [
+        "molit_rent"
+      ],
+      "deal_ymd": [
+        "molit_rent"
+      ],
+      "deposit_10k_won": [
+        "molit_rent"
+      ],
+      "dong_id": [
+        "kostat_admin_code",
+        "derived_location"
+      ],
+      "dong_nm": [
+        "kostat_admin_code",
+        "derived_location"
+      ],
+      "excl_area_m2": [
+        "molit_rent"
+      ],
+      "floor": [
+        "molit_rent"
+      ],
+      "house_type": [
+        "molit_rent"
+      ],
+      "lease_type": [
+        "molit_rent"
+      ],
+      "mois_dong_cd": [
+        "sbiz_store",
+        "derived_location"
+      ],
+      "monthly_rent_10k_won": [
+        "molit_rent"
+      ],
+      "source_type": [
+        "molit_rent"
+      ]
+    }
+  },
+  "created_at": "2026-11-16T13:33:47+09:00",
+  "excluded_columns": {
+    "commute_od": {},
+    "dong_mois_map": {},
+    "dong_profile": {
+      "am_peak_congestion": "혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정",
+      "area_km2": "SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개",
+      "convenience_store_per_km2": "SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개",
+      "internal_pediatric_clinic_per_km2": "SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개",
+      "laundry_per_km2": "SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개",
+      "nearest_congestion_station_distance_m": "혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정",
+      "nearest_congestion_station_nm": "혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정",
+      "nearest_congestion_station_route": "혼잡도. 결정 113 1차 제외(OA-12928 3유형 근거). 6a에서 다시 판정",
+      "pharmacy_per_km2": "SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개",
+      "supermarket_per_km2": "SGIS 도형을 직접 잰 값. 약관 제15조(타인 제공 불가). 6b에서 면적 원천을 바꾸면 공개"
+    },
+    "rent_listing": {}
+  },
+  "files": {
+    "commute_od.csv": {
+      "bytes": 14655426,
+      "rows": 141411,
+      "sha256": "48ef829c330a5563cb24679de34e3be775d73632b7ece5ea1dcaa33cad770ce0"
+    },
+    "commute_od.parquet": {
+      "bytes": 2051756,
+      "rows": 141411,
+      "sha256": "f60f0550e144a09f80fda400cb2c44a87b85b8a11b39c1a864ead04abdbad87f"
+    },
+    "dong_mois_map.csv": {
+      "bytes": 19457,
+      "rows": 427,
+      "sha256": "c2df8c01a2b62a4897194736182c2603966aa0f24aea99901e62339b001cdf06"
+    },
+    "dong_mois_map.parquet": {
+      "bytes": 12031,
+      "rows": 427,
+      "sha256": "214717bec8973afc9920835214a5e1c6de2b734ac6042894a6a0d2aadfbbd207"
+    },
+    "dong_profile.csv": {
+      "bytes": 47536,
+      "rows": 426,
+      "sha256": "df44d259f4a28aec28992f81fc491b36a4344c8c3e963932a608a58c87ab2420"
+    },
+    "dong_profile.parquet": {
+      "bytes": 26614,
+      "rows": 426,
+      "sha256": "d1b2010e81df83b05e27d10bc8815e28c0bead67400a70d2a67da2c32c69ca3c"
+    },
+    "rent_listing.csv": {
+      "bytes": 5405771,
+      "rows": 62691,
+      "sha256": "9f1290db45d28d60de5aa55e9ea793211a39546eb482c46c22631124be2aeae6"
+    },
+    "rent_listing.parquet": {
+      "bytes": 480288,
+      "rows": 62691,
+      "sha256": "64f777d6ca27dcbe57d1109302e7fec6fd9630b4bb34caf03c598053ca335906"
+    }
+  },
+  "licenses": {
+    "derived_location": {
+      "attribution": "계산 방법: data_contract.md 2·3절",
+      "license": "SGIS 정보를 그대로 주지 않는 계산 결과로 판단(법률 검토 아님)",
+      "name": "우리 계산: 도형으로 위치만 정한 결과 (동 배정, 대표점 거리, 행정안전부 코드 대응)",
+      "urls": []
+    },
+    "kostat_admin_code": {
+      "attribution": "통계청 한국행정구역분류",
+      "license": "공개된 분류 코드",
+      "name": "통계청 한국행정구역분류 (행정동 코드·이름)",
+      "urls": []
+    },
+    "molit_rent": {
+      "attribution": "국토교통부 전월세 실거래가 자료(공공데이터포털)",
+      "license": "공공데이터포털 이용허락범위 제한 없음",
+      "name": "국토교통부 전월세 실거래가 (오피스텔, 연립다세대)",
+      "urls": [
+        "https://www.data.go.kr/data/15126475/openapi.do",
+        "https://www.data.go.kr/data/15126473/openapi.do"
+      ]
+    },
+    "sbiz_store": {
+      "attribution": "소상공인시장진흥공단 상가(상권)정보(공공데이터포털)",
+      "license": "공공데이터포털 이용허락범위 제한 없음",
+      "name": "소상공인시장진흥공단 상가(상권)정보",
+      "urls": [
+        "https://www.data.go.kr/data/15083033/fileData.do"
+      ]
+    },
+    "seoul_living": {
+      "attribution": "공공누리 제1유형에 따라 서울특별시 '서울 생활이동' 데이터 이용. 출처: 서울특별시·KT, 서울시 통신데이터",
+      "license": "공공데이터포털 15087677: 제3자 권리 포함 저작권 표시, 공공누리 제1유형. 같은 계열 수도권 생활이동: 가공한 통계·지표 이용 허용(출처 표시), 원본 유상 재배포 금지",
+      "name": "서울 생활이동 (서울특별시·KT)",
+      "urls": [
+        "https://data.seoul.go.kr/dataVisual/seoul/seoulLivingMigration.do",
+        "https://www.data.go.kr/data/15087677/fileData.do",
+        "https://data.seoul.go.kr/dataList/OA-22657/F/1/datasetView.do"
+      ]
+    },
+    "seoul_station_master": {
+      "attribution": "공공누리 제1유형에 따라 서울특별시 '서울시 역사마스터 정보' 이용",
+      "license": "공공누리 제1유형(2026-10-22). 2026-11-22 열린데이터광장 표시는 이용허락범위 제한 없음",
+      "name": "서울시 역사마스터 정보",
+      "urls": [
+        "https://data.seoul.go.kr/dataList/OA-21232/F/1/datasetView.do"
+      ]
+    },
+    "sgis_boundary": {
+      "attribution": null,
+      "license": "SGIS 통합 이용약관 제15조: 사전 승낙 없는 복사·복제·변경·타인 제공 불가, 영리행위 불가",
+      "name": "통계청 SGIS 센서스용 행정구역경계(읍면동) 2025-06-30",
+      "urls": [
+        "https://sgis.mods.go.kr/view/member/clause",
+        "https://sgis.mods.go.kr/jsp/member/copyright.jsp"
+      ]
+    }
+  },
+  "quality": {
+    "commute_pairs_age20_34_basis": "74878",
+    "commute_pairs_all_ages_basis": "66533",
+    "commute_quarantine_rows": "31935758",
+    "dongs_without_mois_code": "0",
+    "dongs_without_monthly_rent_deal": "15",
+    "rent_quarantine_rows": "3"
+  },
+  "schema": {
+    "commute_od": [
+      [
+        "origin_dong_id",
+        "character(8)"
+      ],
+      [
+        "dest_dong_id",
+        "character(8)"
+      ],
+      [
+        "avg_minutes_age20_34",
+        "numeric"
+      ],
+      [
+        "population_age20_34",
+        "numeric"
+      ],
+      [
+        "avg_minutes_all_ages",
+        "numeric"
+      ],
+      [
+        "population_all_ages",
+        "numeric"
+      ],
+      [
+        "avg_minutes",
+        "numeric"
+      ],
+      [
+        "basis",
+        "text"
+      ],
+      [
+        "copied_from_2021_split_dong",
+        "boolean"
+      ],
+      [
+        "distance_km",
+        "numeric"
+      ],
+      [
+        "target_months",
+        "text"
+      ]
+    ],
+    "dong_mois_map": [
+      [
+        "mois_dong_cd",
+        "character(8)"
+      ],
+      [
+        "dong_id",
+        "character(8)"
+      ],
+      [
+        "dong_nm",
+        "text"
+      ],
+      [
+        "is_primary",
+        "boolean"
+      ],
+      [
+        "stores",
+        "integer"
+      ],
+      [
+        "share",
+        "numeric(4,3)"
+      ]
+    ],
+    "dong_profile": [
+      [
+        "dong_id",
+        "character(8)"
+      ],
+      [
+        "mois_dong_cd",
+        "character(8)"
+      ],
+      [
+        "dong_nm",
+        "text"
+      ],
+      [
+        "sgg_cd",
+        "character(5)"
+      ],
+      [
+        "boundary_base_date",
+        "date"
+      ],
+      [
+        "monthly_deals",
+        "bigint"
+      ],
+      [
+        "monthly_median_deposit_10k_won",
+        "double precision"
+      ],
+      [
+        "monthly_median_rent_10k_won",
+        "double precision"
+      ],
+      [
+        "jeonse_deals",
+        "bigint"
+      ],
+      [
+        "jeonse_median_deposit_10k_won",
+        "double precision"
+      ],
+      [
+        "nearest_station_nm",
+        "text"
+      ],
+      [
+        "nearest_station_route",
+        "text"
+      ],
+      [
+        "nearest_station_distance_m",
+        "numeric"
+      ],
+      [
+        "convenience_store",
+        "bigint"
+      ],
+      [
+        "supermarket",
+        "bigint"
+      ],
+      [
+        "pharmacy",
+        "bigint"
+      ],
+      [
+        "internal_pediatric_clinic",
+        "bigint"
+      ],
+      [
+        "laundry",
+        "bigint"
+      ]
+    ],
+    "rent_listing": [
+      [
+        "dong_id",
+        "character(8)"
+      ],
+      [
+        "mois_dong_cd",
+        "character(8)"
+      ],
+      [
+        "dong_nm",
+        "text"
+      ],
+      [
+        "source_type",
+        "text"
+      ],
+      [
+        "house_type",
+        "text"
+      ],
+      [
+        "lease_type",
+        "text"
+      ],
+      [
+        "deal_ymd",
+        "character(6)"
+      ],
+      [
+        "deal_date",
+        "date"
+      ],
+      [
+        "deposit_10k_won",
+        "integer"
+      ],
+      [
+        "monthly_rent_10k_won",
+        "integer"
+      ],
+      [
+        "excl_area_m2",
+        "numeric(7,2)"
+      ],
+      [
+        "floor",
+        "integer"
+      ],
+      [
+        "build_year",
+        "integer"
+      ]
+    ]
+  },
+  "source_manifest_sha256": "543e14b119064978271725539512da86fd243f74b237e2dfd46d939c1d3cff1c",
+  "sources": {
+    "boundary_base_date": "2025-06-30",
+    "commute_months": "202602,202603,202604,202605,202606,202607",
+    "congestion_collected_date": "2026-11-16",
+    "rent_collected_date": "2026-11-16",
+    "rent_months": "202606,202607,202608,202609,202610",
+    "store_collected_date": "2026-11-14"
+  },
+  "terms_checked_date": "2026-11-22",
+  "version": "v2026.11.16"
+}
